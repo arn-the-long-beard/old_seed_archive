@@ -32,7 +32,7 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
         .subscribe(Msg::UserLogged);
 
     let mut router: Router<Routes> = Router::new();
-    router.set_base_url(url.to_base_url()).build();
+    router.set_base_url(url.to_base_url());
 
     Model {
         theme: Theme::default(),

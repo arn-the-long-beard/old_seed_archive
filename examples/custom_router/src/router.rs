@@ -54,6 +54,14 @@ pub struct Router<Routes: IntoEnumIterator + Copy + Clone + PartialEq> {
 //         }
 //     }
 // }
+pub fn build<Routes: IntoEnumIterator + Copy + Clone + PartialEq + Display>(
+) -> HashMap<String, Routes> {
+    let mut hash_map = HashMap::new();
+    for route in Routes::iter() {
+        hash_map.insert(route.to_string().to_snake_case(), route);
+    }
+    hash_map
+}
 
 #[derive(Debug)]
 pub struct ExtractedRoute<Routes: IntoEnumIterator + Copy + Clone + PartialEq> {
@@ -66,7 +74,7 @@ impl<Routes: IntoEnumIterator + Copy + Clone + PartialEq + Display> Router<Route
     pub fn new() -> Router<Routes> {
         Router {
             current_history_index: 0,
-            routes: HashMap::new(),
+            routes: build::<Routes>(),
             history: Vec::new(),
             current_route: None,
             base_url: Url::new(), // should replace with current ,aybe ?
@@ -74,12 +82,6 @@ impl<Routes: IntoEnumIterator + Copy + Clone + PartialEq + Display> Router<Route
         }
     }
 
-    pub fn build(&mut self) -> &mut Self {
-        for route in Routes::iter() {
-            self.add_route(route, &route.to_string());
-        }
-        self
-    }
     pub fn set_base_url(&mut self, url: Url) -> &mut Self {
         self.base_url = url;
         self
@@ -261,6 +263,7 @@ mod test {
     use strum::IntoEnumIterator;
     #[derive(EnumIter, Display, Debug, Copy, Clone, PartialEq)]
     enum ExampleRoutes {
+        #[strum(serialize = "")]
         Home,
         Login,
         Register,
@@ -276,9 +279,8 @@ mod test {
     #[test]
     fn test_build_router() {
         let mut router: Router<ExampleRoutes> = Router::new();
-        router.build();
-        assert_eq!(router.routes["Home"], ExampleRoutes::Home);
-        assert_eq!(router.routes["Login"], ExampleRoutes::Login);
+        assert_eq!(router.routes[""], ExampleRoutes::Home);
+        assert_eq!(router.routes["login"], ExampleRoutes::Login);
     }
 
     #[test]
@@ -302,7 +304,7 @@ mod test {
         let mut router: Router<ExampleRoutes> = Router::new();
 
         router
-            .add_route(ExampleRoutes::Home, "home")
+            .add_route(ExampleRoutes::Home, "")
             .add_route(ExampleRoutes::Login, "login");
 
         router.navigate_to_new(ExampleRoutes::Home);
@@ -370,12 +372,6 @@ mod test {
     #[test]
     fn test_forward() {
         let mut router: Router<ExampleRoutes> = Router::new();
-
-        router
-            .add_route(ExampleRoutes::Home, "home")
-            .add_route(ExampleRoutes::Login, "login")
-            .add_route(ExampleRoutes::Register, "register")
-            .add_route(ExampleRoutes::Stuff, "stuff");
 
         let back = router.back();
         assert_eq!(back, false, "We should Not have gone backwards");
