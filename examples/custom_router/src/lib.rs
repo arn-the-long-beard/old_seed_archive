@@ -32,7 +32,7 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
         .subscribe(Msg::UserLogged);
 
     let mut router: Router<Routes> = Router::new();
-    router.set_base_url(url.to_base_url());
+    router.init_url_and_navigation(url);
 
     Model {
         theme: Theme::default(),
@@ -42,12 +42,13 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     }
 }
 
-#[derive(EnumIter, Debug, Display, Copy, Clone, PartialEq)] // need to make a derive (Routing) or something maybe
+#[derive(EnumIter, Debug, Display, Copy, EnumProperty, Clone, PartialEq)] // need to make a derive (Routing) or something maybe
 pub enum Routes {
     Home,
     Login,
     Register,
     Dashboard,
+    #[strum(props(Default = "true"))]
     NotFound,
     // Admin(page::admin::Model),
 }

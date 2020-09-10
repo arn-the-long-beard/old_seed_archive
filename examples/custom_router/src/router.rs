@@ -1,7 +1,7 @@
 use seed::prelude::wasm_bindgen::__rt::std::collections::HashMap;
 use seed::Url;
 use std::fmt::Display;
-use strum::IntoEnumIterator;
+use strum::{EnumProperty, IntoEnumIterator};
 // impl Clone for ExampleRoutes {
 //     fn clone(&self) -> Self {
 //         *self
@@ -34,6 +34,7 @@ pub struct Router<Routes: IntoEnumIterator + Copy + Clone + PartialEq> {
     pub routes: HashMap<String, Routes>,
     pub current_route: Option<Routes>,
     pub current_history_index: usize,
+    pub default_route: Routes,
     base_url: Url,
     pub current_move: Move,
     history: Vec<Routes>,
@@ -54,7 +55,7 @@ pub struct Router<Routes: IntoEnumIterator + Copy + Clone + PartialEq> {
 //         }
 //     }
 // }
-pub fn build<Routes: IntoEnumIterator + Copy + Clone + PartialEq + Display>(
+pub fn build<Routes: IntoEnumIterator + EnumProperty + Copy + Clone + PartialEq + Display>(
 ) -> HashMap<String, Routes> {
     let mut hash_map = HashMap::new();
     for route in Routes::iter() {
@@ -64,17 +65,32 @@ pub fn build<Routes: IntoEnumIterator + Copy + Clone + PartialEq + Display>(
 }
 
 #[derive(Debug)]
-pub struct ExtractedRoute<Routes: IntoEnumIterator + Copy + Clone + PartialEq> {
+pub struct ExtractedRoute<
+    Routes: IntoEnumIterator + EnumProperty + EnumProperty + Copy + Clone + PartialEq,
+> {
     pub url: Url,
     pub is_active: bool,
     pub path: String,
     pub route: Routes,
 }
-impl<Routes: IntoEnumIterator + Copy + Clone + PartialEq + Display> Router<Routes> {
+impl<Routes: IntoEnumIterator + EnumProperty + Copy + Clone + PartialEq + Display> Router<Routes> {
     pub fn new() -> Router<Routes> {
+        let mut hash_map: HashMap<String, Routes> = HashMap::new();
+        let mut default_route: Option<Routes> = None;
+        for route in Routes::iter() {
+            hash_map.insert(route.to_string().to_snake_case(), route);
+            if route.get_str("Default").is_some() {
+                default_route = Some(route);
+            }
+        }
+        if default_route.is_none() {
+            panic!("You need a default route for your routing to redirect when wrong url/path")
+        }
+        let def = default_route.unwrap();
         Router {
             current_history_index: 0,
-            routes: build::<Routes>(),
+            routes: hash_map,
+            default_route: def,
             history: Vec::new(),
             current_route: None,
             base_url: Url::new(), // should replace with current ,aybe ?
@@ -87,6 +103,11 @@ impl<Routes: IntoEnumIterator + Copy + Clone + PartialEq + Display> Router<Route
         self
     }
 
+    pub fn init_url_and_navigation(&mut self, url: Url) -> &mut Self {
+        self.set_base_url(url.to_base_url());
+        self.navigate_to_url(url);
+        self
+    }
     // pub fn routes_values(&'static self) -> Values<String> {
     //     let mut values = &self.routes.values();
     //     values.clone()
@@ -194,8 +215,12 @@ impl<Routes: IntoEnumIterator + Copy + Clone + PartialEq + Display> Router<Route
         let path_result = url.next_path_part();
         if let Some(path) = path_result {
             if let Some(route_match) = self.mapped_routes().iter().find(|r| r.path == path) {
-                self.navigate_to_new(route_match.route)
+                self.navigate_to_new(route_match.route);
+            } else {
+                self.navigate_to_new(self.default_route);
             }
+        } else {
+            self.navigate_to_new(self.default_route);
         }
     }
 
@@ -261,26 +286,30 @@ mod test {
     use crate::router::Router;
     use std::string::ToString;
     use strum::IntoEnumIterator;
-    #[derive(EnumIter, Display, Debug, Copy, Clone, PartialEq)]
+    #[derive(EnumIter, EnumProperty, Display, Debug, Copy, Clone, PartialEq)]
     enum ExampleRoutes {
         #[strum(serialize = "")]
         Home,
         Login,
         Register,
         Stuff,
+        #[strum(props(Default = "true"))]
+        NotFound,
     }
     #[test]
     fn test_iteration() {
         for route in ExampleRoutes::iter() {
             println!("the route is {:?}", route);
         }
-        assert_eq!(ExampleRoutes::iter().len(), 4)
+        assert_eq!(ExampleRoutes::iter().len(), 5);
     }
     #[test]
     fn test_build_router() {
         let mut router: Router<ExampleRoutes> = Router::new();
+
         assert_eq!(router.routes[""], ExampleRoutes::Home);
         assert_eq!(router.routes["login"], ExampleRoutes::Login);
+        assert_eq!(router.default_route, ExampleRoutes::NotFound)
     }
 
     #[test]
@@ -291,7 +320,7 @@ mod test {
             .add_route(ExampleRoutes::Home, "home")
             .add_route(ExampleRoutes::Login, "login");
 
-        let url = router.base_url().clone().add_path_part("home");
+        let url = router.base_url().clone().add_path_part("");
         let url_from_router = router.url(ExampleRoutes::Home);
 
         eprintln!("{:?}", url.path());
