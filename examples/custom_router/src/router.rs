@@ -287,12 +287,25 @@ mod test {
     use std::string::ToString;
     use strum::IntoEnumIterator;
     #[derive(EnumIter, EnumProperty, Display, Debug, Copy, Clone, PartialEq)]
+    enum DashboardRoutes {
+        #[strum(props(Default = "true"))]
+        Root,
+        Other,
+    }
+
+    impl Default for DashboardRoutes {
+        fn default() -> DashboardRoutes {
+            DashboardRoutes::Root
+        }
+    }
+    #[derive(EnumIter, EnumProperty, Display, Debug, Copy, Clone, PartialEq)]
     enum ExampleRoutes {
         #[strum(serialize = "")]
         Home,
         Login,
         Register,
         Stuff,
+        Dashboard(DashboardRoutes),
         #[strum(props(Default = "true"))]
         NotFound,
     }
@@ -301,7 +314,7 @@ mod test {
         for route in ExampleRoutes::iter() {
             println!("the route is {:?}", route);
         }
-        assert_eq!(ExampleRoutes::iter().len(), 5);
+        assert_eq!(ExampleRoutes::iter().len(), 6);
     }
     #[test]
     fn test_build_router() {
