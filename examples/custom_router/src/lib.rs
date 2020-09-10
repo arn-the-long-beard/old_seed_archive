@@ -9,14 +9,14 @@ use crate::{
     theme::Theme,
     top_bar::TopBar,
 };
-use enum_map::Enum;
 use heck::SnakeCase;
-
-extern crate enum_map;
-
-mod pages;
+extern crate strum;
+#[macro_use]
+extern crate strum_macros;
+use strum::IntoEnumIterator;
 
 pub mod models;
+mod pages;
 mod router;
 mod theme;
 mod top_bar;
@@ -32,13 +32,7 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
         .subscribe(Msg::UserLogged);
 
     let mut router: Router<Routes> = Router::new();
-    router.set_base_url(url.to_base_url());
-    router
-        .add_route(Routes::Home, "home")
-        .add_route(Routes::Register, "register")
-        .add_route(Routes::Login, "login")
-        .add_route(Routes::Dashboard, "dashboard")
-        .add_route(Routes::NotFound, "404");
+    router.set_base_url(url.to_base_url()).build();
 
     Model {
         theme: Theme::default(),
@@ -48,14 +42,14 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     }
 }
 
-#[derive(Debug, Enum, Copy, Clone, PartialEq)] // need to make a derive (Routing) or something maybe
+#[derive(EnumIter, Debug, Display, Copy, Clone, PartialEq)] // need to make a derive (Routing) or something maybe
 pub enum Routes {
     Home,
     Login,
     Register,
     Dashboard,
-    // Admin(page::admin::Model),
     NotFound,
+    // Admin(page::admin::Model),
 }
 // ------ ------
 //     Model
@@ -73,22 +67,6 @@ struct Model {
 pub struct State {
     pub register: pages::register::Model,
     pub login: pages::login::Model,
-}
-
-// ------ ------
-//     Urls
-// ------ ------
-
-struct_urls!();
-/// Construct url injected in the web browser with path
-impl<'a> Urls<'a> {
-    pub fn build_url(self, path: &str) -> Url {
-        if path.eq("Home") {
-            self.base_url()
-        } else {
-            self.base_url().add_path_part(path.to_snake_case())
-        }
-    }
 }
 
 // ------ ------

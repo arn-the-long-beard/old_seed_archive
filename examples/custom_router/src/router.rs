@@ -1,14 +1,28 @@
-use crate::{Routes, Urls};
-use enum_map::{Enum, EnumMap, Values};
+use seed::prelude::wasm_bindgen::__rt::std::collections::HashMap;
 use seed::Url;
 use std::fmt::Display;
-
+use strum::IntoEnumIterator;
 // impl Clone for ExampleRoutes {
 //     fn clone(&self) -> Self {
 //         *self
 //     }
 // }
-
+// ------ ------
+//     Urls
+// ------ ------
+use heck::SnakeCase;
+use seed::{*, *};
+struct_urls!();
+/// Construct url injected in the web browser with path
+impl<'a> Urls<'a> {
+    pub fn build_url(self, path: &str) -> Url {
+        if path.eq("Home") {
+            self.base_url()
+        } else {
+            self.base_url().add_path_part(path.to_snake_case())
+        }
+    }
+}
 pub enum Move {
     IsNavigating,
     IsMovingBack,
@@ -16,8 +30,8 @@ pub enum Move {
     IsReady,
 }
 
-pub struct Router<Routes: Enum<String> + Copy + Clone + PartialEq> {
-    pub routes: EnumMap<Routes, String>,
+pub struct Router<Routes: IntoEnumIterator + Copy + Clone + PartialEq> {
+    pub routes: HashMap<String, Routes>,
     pub current_route: Option<Routes>,
     pub current_history_index: usize,
     base_url: Url,
@@ -25,13 +39,13 @@ pub struct Router<Routes: Enum<String> + Copy + Clone + PartialEq> {
     history: Vec<Routes>,
 }
 
-// pub struct RouteBuilder<Routes: Enum<String> + Copy + Clone + PartialEq> {
+// pub struct RouteBuilder<Routes:  IntoEnumIterator+ Copy + Clone + PartialEq> {
 //     route: Routes,
 //     path: Option<String>,
 //     guard: Option<bool>,
 // }
 //
-// impl<Routes: Enum<String> + Copy + Clone + PartialEq> RouteBuilder<Routes> {
+// impl<Routes:  IntoEnumIterator+ Copy + Clone + PartialEq> RouteBuilder<Routes> {
 //     pub fn new(route: Routes) -> RouteBuilder<Routes> {
 //         RouteBuilder {
 //             route,
@@ -42,34 +56,41 @@ pub struct Router<Routes: Enum<String> + Copy + Clone + PartialEq> {
 // }
 
 #[derive(Debug)]
-pub struct ExtractedRoute<Routes: Enum<String> + Copy + Clone + PartialEq> {
+pub struct ExtractedRoute<Routes: IntoEnumIterator + Copy + Clone + PartialEq> {
     pub url: Url,
     pub is_active: bool,
     pub path: String,
     pub route: Routes,
 }
-impl<Routes: Enum<String> + Copy + Clone + PartialEq> Router<Routes> {
+impl<Routes: IntoEnumIterator + Copy + Clone + PartialEq + Display> Router<Routes> {
     pub fn new() -> Router<Routes> {
         Router {
             current_history_index: 0,
-            routes: EnumMap::new(),
+            routes: HashMap::new(),
             history: Vec::new(),
             current_route: None,
             base_url: Url::new(), // should replace with current ,aybe ?
             current_move: Move::IsReady,
         }
     }
+
+    pub fn build(&mut self) -> &mut Self {
+        for route in Routes::iter() {
+            self.add_route(route, &route.to_string());
+        }
+        self
+    }
     pub fn set_base_url(&mut self, url: Url) -> &mut Self {
         self.base_url = url;
         self
     }
 
-    pub fn routes_values(&'static self) -> Values<String> {
-        let mut values = &self.routes.values();
-        values.clone()
-    }
+    // pub fn routes_values(&'static self) -> Values<String> {
+    //     let mut values = &self.routes.values();
+    //     values.clone()
+    // }
     pub fn add_route(&mut self, route: Routes, value: &str) -> &mut Self {
-        self.routes[route] = value.to_string();
+        self.routes.insert(value.to_string(), route);
         self
     }
 
@@ -177,7 +198,7 @@ impl<Routes: Enum<String> + Copy + Clone + PartialEq> Router<Routes> {
     }
 
     pub fn url(&self, route: Routes) -> Url {
-        Urls::new(&self.base_url).build_url(&self.routes[route])
+        Urls::new(&self.base_url).build_url(route.to_string().to_snake_case().as_str())
     }
 
     pub fn request_moving_back<F: FnOnce(Url) -> R, R>(&mut self, func: F) {
@@ -218,12 +239,13 @@ impl<Routes: Enum<String> + Copy + Clone + PartialEq> Router<Routes> {
     }
     pub fn mapped_routes(&self) -> Vec<ExtractedRoute<Routes>> {
         let mut list: Vec<ExtractedRoute<Routes>> = Vec::new();
-        for (route, path) in &self.routes {
+        for route in Routes::iter() {
+            let path = route.to_string().to_snake_case();
             println!(" path ---> {:?}", path);
             let is_active = self.is_current_route(route);
             list.push(ExtractedRoute {
                 url: self.url(route),
-                path: path.to_string(),
+                path,
                 is_active,
                 route,
             })
@@ -235,10 +257,9 @@ impl<Routes: Enum<String> + Copy + Clone + PartialEq> Router<Routes> {
 #[cfg(test)]
 mod test {
     use crate::router::Router;
-
-    use enum_map::Enum;
-
-    #[derive(Debug, Enum, Copy, Clone, PartialEq)]
+    use std::string::ToString;
+    use strum::IntoEnumIterator;
+    #[derive(EnumIter, Display, Debug, Copy, Clone, PartialEq)]
     enum ExampleRoutes {
         Home,
         Login,
@@ -246,15 +267,18 @@ mod test {
         Stuff,
     }
     #[test]
+    fn test_iteration() {
+        for route in ExampleRoutes::iter() {
+            println!("the route is {:?}", route);
+        }
+        assert_eq!(ExampleRoutes::iter().len(), 4)
+    }
+    #[test]
     fn test_build_router() {
         let mut router: Router<ExampleRoutes> = Router::new();
-
-        router
-            .add_route(ExampleRoutes::Home, "home")
-            .add_route(ExampleRoutes::Login, "login");
-
-        assert_eq!(router.routes[ExampleRoutes::Home], "home");
-        assert_eq!(router.routes[ExampleRoutes::Login], "login");
+        router.build();
+        assert_eq!(router.routes["Home"], ExampleRoutes::Home);
+        assert_eq!(router.routes["Login"], ExampleRoutes::Login);
     }
 
     #[test]
