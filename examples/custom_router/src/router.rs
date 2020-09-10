@@ -80,7 +80,7 @@ impl<Routes: Enum<String> + Copy + Clone + PartialEq> Router<Routes> {
 
     /// Go back in history and navigate back to the previous route
     ///  # Note for now it does not add to history since we navigate inside
-    pub fn back(&mut self) -> bool {
+    fn back(&mut self) -> bool {
         if let Some(next_route) = self.can_back_with_route() {
             self.current_route = Some(next_route);
             self.current_history_index -= 1;
@@ -136,7 +136,7 @@ impl<Routes: Enum<String> + Copy + Clone + PartialEq> Router<Routes> {
 
     /// to move forward in the history
     /// # Note for now it does not add to history since we navigate inside
-    pub fn forward(&mut self) -> bool {
+    fn forward(&mut self) -> bool {
         if let Some(next_route) = self.can_forward_with_route() {
             self.current_route = Some(next_route);
             self.current_history_index += 1;
@@ -167,7 +167,7 @@ impl<Routes: Enum<String> + Copy + Clone + PartialEq> Router<Routes> {
 
     /// Match the url that change and update the router with the new current
     /// Route
-    pub fn navigate_to_url(&mut self, mut url: Url) {
+    fn navigate_to_url(&mut self, mut url: Url) {
         let path_result = url.next_path_part();
         if let Some(path) = path_result {
             if let Some(route_match) = self.mapped_routes().iter().find(|r| r.path == path) {
