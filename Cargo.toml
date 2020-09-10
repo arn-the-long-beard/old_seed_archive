@@ -123,6 +123,7 @@ members = [
     "examples/counter",
     "examples/canvas",
     "examples/custom_elements",
+    "examples/custom_router",
     "examples/drop_zone",
     "examples/el_key",
     "examples/graphql",
