@@ -16,11 +16,7 @@ struct_urls!();
 /// Construct url injected in the web browser with path
 impl<'a> Urls<'a> {
     pub fn build_url(self, path: &str) -> Url {
-        if path.eq("Home") {
-            self.base_url()
-        } else {
-            self.base_url().add_path_part(path.to_snake_case())
-        }
+        self.base_url().add_path_part(path.to_snake_case())
     }
 }
 pub enum Move {
