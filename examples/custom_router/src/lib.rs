@@ -100,13 +100,13 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match msg {
         Msg::UrlChanged(subs::UrlChanged(url)) => {
             log!("URL has changed");
-
+            model.router.confirm_navigation(url);
             // model.page = Route::init(url);
         }
         Msg::UrlRequested(request) => {
             log!("URL requested");
-            let url = request.0;
-            model.router.confirm_navigation(url);
+            // let url = request.0;
+
             //side effect is bad i think
         }
         Msg::Register(register_message) => pages::register::update(
