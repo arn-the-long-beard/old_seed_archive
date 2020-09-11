@@ -4,21 +4,18 @@ mod request;
 use seed::{prelude::*, *};
 extern crate heck;
 use crate::models::user::LoggedUser;
-use crate::{
-    router::{ExtractedRoute, Router},
-    theme::Theme,
-    top_bar::TopBar,
-};
+use crate::{theme::Theme, top_bar::TopBar};
 use heck::SnakeCase;
 extern crate strum;
 #[macro_use]
 extern crate strum_macros;
 use crate::pages::dashboard::DashboardRoutes;
+use crate::router::{ExtractedRoute, Router};
 use strum::IntoEnumIterator;
 
 pub mod models;
 mod pages;
-mod router;
+pub mod router;
 mod theme;
 mod top_bar;
 
