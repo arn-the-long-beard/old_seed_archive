@@ -13,6 +13,7 @@ use heck::SnakeCase;
 extern crate strum;
 #[macro_use]
 extern crate strum_macros;
+use crate::pages::dashboard::DashboardRoutes;
 use strum::IntoEnumIterator;
 
 pub mod models;
@@ -42,12 +43,15 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     }
 }
 
-#[derive(EnumIter, Debug, Display, Copy, EnumProperty, Clone, PartialEq)] // need to make a derive (Routing) or something maybe
+#[derive(EnumIter, EnumString, Debug, Display, Copy, EnumProperty, Clone, PartialEq)]
+#[strum(serialize_all = "snake_case")]
+// need to make a derive (Routing) or something maybe
 pub enum Routes {
     Home,
     Login,
     Register,
-    Dashboard,
+    #[strum(props(children = DashboardRoutes))]
+    Dashboard(DashboardRoutes),
     #[strum(props(Default = "true"))]
     NotFound,
     // Admin(page::admin::Model),
@@ -68,6 +72,7 @@ struct Model {
 pub struct State {
     pub register: pages::register::Model,
     pub login: pages::login::Model,
+    pub dashboard: pages::dashboard::Model,
 }
 
 // ------ ------
@@ -83,6 +88,7 @@ pub enum Msg {
     Register(pages::register::Msg),
     Login(pages::login::Msg),
     UserLogged(LoggedUser),
+    Dashboard(pages::dashboard::Msg),
     GoBack,
     GoForward,
     SwitchToTheme(Theme),
@@ -113,6 +119,11 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             &mut model.state.login,
             &mut orders.proxy(Msg::Login),
         ),
+        Msg::Dashboard(dashboard_message) => pages::dashboard::update(
+            dashboard_message,
+            &mut model.state.dashboard,
+            &mut orders.proxy(Msg::Dashboard),
+        ),
         Msg::UserLogged(user) => {
             log!("got user logged");
             model.logged_user = Some(user);
@@ -120,6 +131,7 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             //     Urls::new(&model.base_url).build_url(DASHBOARD),
             // ));
         }
+
         Msg::SwitchToTheme(theme) => model.theme = theme,
 
         Msg::GoBack => {
@@ -151,6 +163,10 @@ fn view(model: &Model) -> impl IntoNodes<Msg> {
                     Routes::Login => pages::login::view(&model.state.login).map_msg(Msg::Login),
                     Routes::Register => {
                         pages::register::view(&model.state.register).map_msg(Msg::Register)
+                    }
+                    Routes::Dashboard(dashboard_routes) => {
+                        pages::dashboard::cross(*dashboard_routes, &model.state.dashboard)
+                            .map_msg(Msg::Dashboard)
                     }
                     _ => div!["404"],
                 }
