@@ -14,7 +14,7 @@ impl Clone for Route {
         Route {
             path: self.path.to_string(),
             parent_route_path: "".to_string(),
-            children: HashMap::new(),
+            children: self.children.clone(),
             guarded: false,
             default: false,
         }

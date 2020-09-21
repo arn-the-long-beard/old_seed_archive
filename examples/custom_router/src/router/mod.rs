@@ -328,7 +328,6 @@ mod test {
             DashboardRoutes::Root
         }
     }
-
     #[derive(EnumIter, EnumString, EnumProperty, Display, Debug, Copy, Clone, PartialEq, Routes)]
     #[strum(serialize_all = "snake_case")]
     enum ExampleRoutes {

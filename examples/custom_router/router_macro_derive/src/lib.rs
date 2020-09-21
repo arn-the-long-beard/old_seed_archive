@@ -78,9 +78,9 @@ pub fn routes(input: TokenStream) -> TokenStream {
               impl ExtractRoutes for #name {
                  fn get_routes() -> HashMap<String,Route> {
                  let mut hash_map: HashMap<String, Route> = HashMap::new();
-                 let future_routes : Vec<Route> = vec![#(#extracted_routes)*];
+                 let future_routes  = vec![#(#extracted_routes)*];
                  for r in future_routes {
-                       hash_map.insert(r.path.to_string(), r.clone() );
+                       hash_map.insert(r.path.to_string(), r );
                  }
                    hash_map
                 }
@@ -110,21 +110,6 @@ fn extract_routes(variants: Iter<Variant>) -> Vec<TokenStream2> {
                     },
                 };
                 extracted_routes.push(tokens);
-                //
-                // let sub_routes_variants = children.named.first().cloned().unwrap();
-                // let ast = sub_routes_variants.ident.unwrap();
-                //
-                // // Error out if we're not annotating an enum
-                //
-                // let data: DataEnum = match ast.data {
-                //     Data::Enum(d) => d,
-                //     _ => panic!("Can generate Routes only for enum"),
-                // };
-                //
-                // let name = &ast.ident;
-                // let variants = data.variants.iter();
-                // let mut sub_extracted_routes = extract_routes(variants);
-                // extracted_routes.append(&mut sub_extracted_routes);
             }
             _ => {
                 let tokens = quote! {
