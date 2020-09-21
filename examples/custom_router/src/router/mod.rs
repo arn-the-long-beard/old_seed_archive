@@ -2,6 +2,8 @@ use seed::prelude::wasm_bindgen::__rt::std::collections::HashMap;
 use seed::Url;
 use std::fmt::Display;
 use strum::{EnumProperty, IntoEnumIterator};
+pub mod children;
+pub mod route;
 // impl Clone for ExampleRoutes {
 //     fn clone(&self) -> Self {
 //         *self
@@ -19,7 +21,8 @@ impl<'a> Urls<'a> {
         self.base_url().add_path_part(path.to_snake_case())
     }
 }
-pub mod children;
+// pub mod children;
+// pub mod route;
 pub enum Move {
     IsNavigating,
     IsMovingBack,
@@ -294,8 +297,11 @@ mod test {
     use crate::router::Router;
     extern crate router_macro_derive;
 
+    use crate::router::children::ExtractRoutes;
+    use crate::router::route::Route;
     use router_macro_derive::MyProcMacro;
-
+    use router_macro_derive::Routes;
+    use std::collections::HashMap;
     use std::str::FromStr;
     use strum::{EnumProperty, IntoEnumIterator};
 
@@ -314,7 +320,16 @@ mod test {
     }
 
     #[derive(
-        EnumIter, EnumString, EnumProperty, Display, Debug, Copy, Clone, PartialEq, MyProcMacro,
+        EnumIter,
+        EnumString,
+        EnumProperty,
+        Display,
+        Debug,
+        Copy,
+        Clone,
+        PartialEq,
+        MyProcMacro,
+        Routes,
     )]
     #[strum(serialize_all = "snake_case")]
     enum ExampleRoutes {
@@ -323,55 +338,10 @@ mod test {
         Login,
         Register,
         Stuff,
-        #[strum(props(Children = "true"))]
-        Dashboard {
-            children: DashboardRoutes,
-        },
+        Dashboard(DashboardRoutes),
         #[strum(props(Default = "true"))]
         NotFound,
     }
-
-    // impl ChildrenRoutes<ExampleRoutes> for ExampleRoutes {
-    //     fn children_routes_for_route<C>(&self, route: ExampleRoutes) -> Option<C>
-    //     where
-    //         Self: IntoEnumIterator
-    //             + std::str::FromStr
-    //             + EnumProperty
-    //             + Copy
-    //             + Clone
-    //             + PartialEq
-    //             + Display,
-    //     {
-    //             if let Some(tag) = self.get_str("Children") {
-    //                 let option = match self {
-    //                     route { children } => Some(*children),
-    //                     _ => None,
-    //                 };
-    //                 option
-    //             } else {
-    //                 None
-    //             }
-    //     }
-    //     // fn children_routes_or(&self) -> Option<DashboardRoutes>
-    //     // where
-    //     //     Self: IntoEnumIterator
-    //     //         + std::str::FromStr
-    //     //         + EnumProperty
-    //     //         + Copy
-    //     //         + Clone
-    //     //         + PartialEq
-    //     //         + Display,
-    //     // {
-    //     //     if let Some(tag) = self.get_str("Children") {
-    //     //         match self {
-    //     //             ExampleRoutes::Dashboard { children } => Some(*children),
-    //     //             _ => None,
-    //     //         }
-    //     //     } else {
-    //     //         None
-    //     //     }
-    //     // }
-    // }
     #[test]
     fn test_iteration() {
         for route in ExampleRoutes::iter() {
@@ -387,12 +357,12 @@ mod test {
 
         let routes = router.routes.clone();
 
-        let dashboard = DashboardRoute {
-            children: DashboardRoutes::Root,
-        };
-        let sub_routes = dashboard.children();
+        // let dashboard = DashboardRoute {
+        //     children: DashboardRoutes::Root,
+        // };
+        // let sub_routes = dashboard.children();
 
-        assert_eq!(sub_routes, DashboardRoutes::Root);
+        // assert_eq!(sub_routes, DashboardRoutes::Root);
 
         // let stuff = dashboard.get_children();
         // dashboard.get_children();
@@ -403,15 +373,21 @@ mod test {
 
         assert_eq!(router.routes[""], ExampleRoutes::Home);
         assert_eq!(router.routes["login"], ExampleRoutes::Login);
-        assert_eq!(
-            router.routes["dashboard"],
-            ExampleRoutes::Dashboard {
-                children: Default::default()
-            }
-        );
+        // assert_eq!(
+        //     router.routes["dashboard"],
+        //     ExampleRoutes::Dashboard {
+        //         children: Default::default()
+        //     }
+        // );
 
         assert_eq!(router.default_route, ExampleRoutes::NotFound);
         let r = ExampleRoutes::from_str("login").unwrap();
+
+        let routes = ExampleRoutes::get_routes();
+
+        for r in routes {
+            println!("{:?}", r);
+        }
         assert_eq!(router.routes["login"], r);
     }
 

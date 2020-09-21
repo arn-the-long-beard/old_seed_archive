@@ -7,6 +7,7 @@ mod tests {
 }
 #[macro_use]
 extern crate proc_macro;
+use heck::SnakeCase;
 use proc_macro::TokenStream;
 use quote::format_ident;
 use quote::{quote, ToTokens};
@@ -54,26 +55,47 @@ pub fn derive_my_proc_macro(input: TokenStream) -> TokenStream {
     println!("{:?}", gen);
     gen.into()
 }
-//
-// #[proc_macro_derive(HelloMacro)]
-// pub fn router_macro_derive(input: TokenStream) -> TokenStream {
-//     // Construct a representation of Rust code as a syntax tree
-//     // that we can manipulate
-//     let ast = syn::parse(input).unwrap();
-//
-//     // Build the trait implementation
-//     impl_children_route(&ast)
-// }
-// fn impl_children_route(ast: &syn::DeriveInput) -> TokenStream {
-//     let name = &ast.ident;
-//     let gen = quote! {
-//         impl ChildrenRoute for #name {
-//             fn children_routes(&self) {
-//                  if let Some(childrem) = self.get_str("Children") {
-//
-//             }
-//             }
-//         }
-//     };
-//     gen.into()
-// }
+#[proc_macro_derive(Routes)]
+pub fn routes(input: TokenStream) -> TokenStream {
+    // Parse the Input
+    let ast: DeriveInput = syn::parse(input).unwrap();
+
+    // Error out if we're not annotating an enum
+
+    let data: DataEnum = match ast.data {
+        Data::Enum(d) => d,
+        _ => panic!("Can generate Routes only for enum"),
+    };
+
+    let name = &ast.ident;
+    let variants = data.variants.iter();
+
+    let mut extracted_routes = Vec::new();
+    for v in variants {
+        let var_id = &v.ident;
+        let path = var_id.to_string().to_snake_case();
+        let tokens = quote! {
+                Route {
+                path: #path.to_string(),
+                parent_route_path: "".to_string(),
+                guarded: false,
+                default: false,
+            },
+        };
+        extracted_routes.push(tokens);
+    }
+    let extract_route = quote! {
+              impl ExtractRoutes for #name {
+                 fn get_routes() -> HashMap<String,Route> {
+                 let mut hash_map: HashMap<String, Route> = HashMap::new();
+                 let future_routes : Vec<Route> = vec![#(#extracted_routes)*];
+                 for r in future_routes {
+                       hash_map.insert(r.path.to_string(), r.clone() );
+                 }
+                   hash_map
+                }
+            }
+    };
+
+    extract_route.into()
+}

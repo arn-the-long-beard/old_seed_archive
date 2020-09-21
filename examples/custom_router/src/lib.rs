@@ -1,4 +1,5 @@
 #![feature(map_into_keys_values)]
+#![feature(box_syntax)]
 
 mod request;
 use seed::{prelude::*, *};
