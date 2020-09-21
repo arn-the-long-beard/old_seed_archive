@@ -309,7 +309,6 @@ mod test {
 
     use crate::router::children::ExtractRoutes;
     use crate::router::route::Route;
-    use router_macro_derive::MyProcMacro;
     use router_macro_derive::Routes;
     use std::collections::HashMap;
     use std::str::FromStr;
