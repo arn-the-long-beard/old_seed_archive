@@ -1,9 +1,13 @@
 use seed::{prelude::*, *};
 pub mod message;
+use crate::router::children::ExtractRoutes;
+use crate::router::route::Route;
+use crate::router::{ExtractedRoute, Router};
+use seed::prelude::wasm_bindgen::__rt::std::collections::HashMap;
 
 pub mod statistics;
-
-#[derive(EnumIter, EnumProperty, Display, Debug, Copy, Clone, PartialEq)]
+use router_macro_derive::Routes;
+#[derive(EnumIter, EnumProperty, Display, Debug, Copy, Clone, PartialEq, Routes)]
 pub enum DashboardRoutes {
     #[strum(props(Default = "true"))]
     Root,

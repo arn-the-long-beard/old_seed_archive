@@ -53,9 +53,7 @@ pub enum Routes {
     Home,
     Login,
     Register,
-    #[strum(props(children = DashboardRoutes))]
-    Dashboard(DashboardRoutes),
-    #[strum(props(Default = "true"))]
+    Dashboard { children: DashboardRoutes },
     NotFound,
     // Admin(page::admin::Model),
 }
@@ -167,8 +165,8 @@ fn view(model: &Model) -> impl IntoNodes<Msg> {
                     Routes::Register => {
                         pages::register::view(&model.state.register).map_msg(Msg::Register)
                     }
-                    Routes::Dashboard(dashboard_routes) => {
-                        pages::dashboard::cross(*dashboard_routes, &model.state.dashboard)
+                    Routes::Dashboard { children } => {
+                        pages::dashboard::cross(*children, &model.state.dashboard)
                             .map_msg(Msg::Dashboard)
                     }
                     _ => div!["404"],

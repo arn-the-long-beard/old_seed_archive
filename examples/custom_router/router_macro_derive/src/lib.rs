@@ -11,6 +11,7 @@ use heck::SnakeCase;
 use proc_macro::TokenStream;
 use quote::format_ident;
 use quote::{quote, ToTokens};
+use syn::export::quote::__private::Ident;
 use syn::export::TokenStream2;
 use syn::punctuated::Iter;
 use syn::{Data, DataEnum, DeriveInput, Fields, Type, Variant};
@@ -72,7 +73,7 @@ pub fn routes(input: TokenStream) -> TokenStream {
     let name = &ast.ident;
     let variants = data.variants.iter();
 
-    let mut extracted_routes = extract_routes(variants);
+    let mut extracted_routes = extract_routes(variants, name);
 
     let extract_route = quote! {
               impl ExtractRoutes for #name {
@@ -90,16 +91,16 @@ pub fn routes(input: TokenStream) -> TokenStream {
     extract_route.into()
 }
 
-fn extract_routes(variants: Iter<Variant>) -> Vec<TokenStream2> {
+fn extract_routes(variants: Iter<Variant>, name: &Ident) -> Vec<TokenStream2> {
     let mut extracted_routes = Vec::new();
     for v in variants {
         let var_id = &v.ident;
-        let path = var_id.to_string().to_snake_case();
 
         match &v.fields {
             Fields::Named(children) => {
                 let children_type = children.named.first().cloned().unwrap().ty.clone();
                 println!("SUUUUUUUUUUUUUUUUUUUUUUUB_Routes");
+                let path = quote! {#name::#var_id{ children : Default::default()}};
                 let tokens = quote! {
                         Route {
                         path: #path.to_string(),
@@ -112,10 +113,11 @@ fn extract_routes(variants: Iter<Variant>) -> Vec<TokenStream2> {
                 extracted_routes.push(tokens);
             }
             _ => {
+                let path = quote! {#name::#var_id};
                 let tokens = quote! {
                         Route {
-                        path: #path.to_string(),
-                          children: HashMap::new(),
+                       path: #path.to_string(),
+                         children: HashMap::new(),
                         parent_route_path: "".to_string(),
                         guarded: false,
                         default: false,

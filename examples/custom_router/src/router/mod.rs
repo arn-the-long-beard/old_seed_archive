@@ -381,7 +381,15 @@ mod test {
 
         assert_eq!(router.default_route, ExampleRoutes::NotFound);
         let r = ExampleRoutes::from_str("login").unwrap();
+        let path = ExampleRoutes::Home.to_string();
 
+        assert_eq!(path, "");
+
+        let dashboard = ExampleRoutes::Dashboard {
+            children: Default::default(),
+        }
+        .to_string();
+        assert_eq!(dashboard, "dashboard");
         let routes: HashMap<String, Route> = ExampleRoutes::get_routes();
         let sub_routes = DashboardRoutes::get_routes();
 
