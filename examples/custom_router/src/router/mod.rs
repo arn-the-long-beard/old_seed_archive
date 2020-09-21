@@ -398,6 +398,15 @@ mod test {
             println!(" children routes {:?}", s_r);
         }
 
+        let fake_route = Route {
+            path: "fake".to_string(),
+            parent_route_path: "".to_string(),
+            children: ExampleRoutes::get_routes(),
+            guarded: false,
+            default: false,
+        };
+        println!("fake route {:?}", fake_route);
+
         assert_eq!(router.routes["login"], r);
     }
 
