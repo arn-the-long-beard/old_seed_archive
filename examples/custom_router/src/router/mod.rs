@@ -315,7 +315,7 @@ mod test {
     use std::str::FromStr;
     use strum::{EnumProperty, IntoEnumIterator};
 
-    #[derive(EnumIter, EnumString, EnumProperty, Display, Debug, Copy, Clone, PartialEq)]
+    #[derive(EnumIter, EnumString, EnumProperty, Display, Debug, Copy, Clone, PartialEq, Routes)]
     #[strum(serialize_all = "snake_case")]
     pub enum DashboardRoutes {
         #[strum(props(Default = "true"))]
@@ -329,18 +329,7 @@ mod test {
         }
     }
 
-    #[derive(
-        EnumIter,
-        EnumString,
-        EnumProperty,
-        Display,
-        Debug,
-        Copy,
-        Clone,
-        PartialEq,
-        MyProcMacro,
-        Routes,
-    )]
+    #[derive(EnumIter, EnumString, EnumProperty, Display, Debug, Copy, Clone, PartialEq, Routes)]
     #[strum(serialize_all = "snake_case")]
     enum ExampleRoutes {
         #[strum(serialize = "")]
@@ -348,7 +337,9 @@ mod test {
         Login,
         Register,
         Stuff,
-        Dashboard(DashboardRoutes),
+        Dashboard {
+            children: DashboardRoutes,
+        },
         #[strum(props(Default = "true"))]
         NotFound,
     }
@@ -393,11 +384,20 @@ mod test {
         assert_eq!(router.default_route, ExampleRoutes::NotFound);
         let r = ExampleRoutes::from_str("login").unwrap();
 
-        let routes = ExampleRoutes::get_routes();
+        let routes: HashMap<String, Route> = ExampleRoutes::get_routes();
+        let sub_routes = DashboardRoutes::get_routes();
 
-        for r in routes {
-            println!("{:?}", r);
+        if !routes["dashboard"].children.is_empty() {
+            eprintln!("{:?}", routes["dashboard"].children)
         }
+        for r in routes {
+            println!(" parent routes {:?}", r);
+        }
+
+        for s_r in sub_routes {
+            println!(" children routes {:?}", s_r);
+        }
+
         assert_eq!(router.routes["login"], r);
     }
 

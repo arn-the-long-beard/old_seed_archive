@@ -11,7 +11,9 @@ use heck::SnakeCase;
 use proc_macro::TokenStream;
 use quote::format_ident;
 use quote::{quote, ToTokens};
-use syn::{Data, DataEnum, DeriveInput, Fields, Type};
+use syn::export::TokenStream2;
+use syn::punctuated::Iter;
+use syn::{Data, DataEnum, DeriveInput, Fields, Type, Variant};
 
 #[proc_macro_derive(MyProcMacro)]
 pub fn derive_my_proc_macro(input: TokenStream) -> TokenStream {
@@ -70,20 +72,8 @@ pub fn routes(input: TokenStream) -> TokenStream {
     let name = &ast.ident;
     let variants = data.variants.iter();
 
-    let mut extracted_routes = Vec::new();
-    for v in variants {
-        let var_id = &v.ident;
-        let path = var_id.to_string().to_snake_case();
-        let tokens = quote! {
-                Route {
-                path: #path.to_string(),
-                parent_route_path: "".to_string(),
-                guarded: false,
-                default: false,
-            },
-        };
-        extracted_routes.push(tokens);
-    }
+    let mut extracted_routes = extract_routes(variants);
+
     let extract_route = quote! {
               impl ExtractRoutes for #name {
                  fn get_routes() -> HashMap<String,Route> {
@@ -98,4 +88,57 @@ pub fn routes(input: TokenStream) -> TokenStream {
     };
 
     extract_route.into()
+}
+
+fn extract_routes(variants: Iter<Variant>) -> Vec<TokenStream2> {
+    let mut extracted_routes = Vec::new();
+    for v in variants {
+        let var_id = &v.ident;
+        let path = var_id.to_string().to_snake_case();
+
+        match &v.fields {
+            Fields::Named(children) => {
+                let children_type = children.named.first().cloned().unwrap().ty.clone();
+                println!("SUUUUUUUUUUUUUUUUUUUUUUUB_Routes");
+                let tokens = quote! {
+                        Route {
+                        path: #path.to_string(),
+                        children: #children_type::get_routes(),
+                        parent_route_path: "".to_string(),
+                        guarded: false,
+                        default: false,
+                    },
+                };
+                extracted_routes.push(tokens);
+                //
+                // let sub_routes_variants = children.named.first().cloned().unwrap();
+                // let ast = sub_routes_variants.ident.unwrap();
+                //
+                // // Error out if we're not annotating an enum
+                //
+                // let data: DataEnum = match ast.data {
+                //     Data::Enum(d) => d,
+                //     _ => panic!("Can generate Routes only for enum"),
+                // };
+                //
+                // let name = &ast.ident;
+                // let variants = data.variants.iter();
+                // let mut sub_extracted_routes = extract_routes(variants);
+                // extracted_routes.append(&mut sub_extracted_routes);
+            }
+            _ => {
+                let tokens = quote! {
+                        Route {
+                        path: #path.to_string(),
+                          children: HashMap::new(),
+                        parent_route_path: "".to_string(),
+                        guarded: false,
+                        default: false,
+                    },
+                };
+                extracted_routes.push(tokens);
+            } /* Implement traits for the new struct and stuff */
+        }
+    }
+    extracted_routes
 }
