@@ -11,7 +11,12 @@ extern crate strum;
 #[macro_use]
 extern crate strum_macros;
 use crate::pages::dashboard::DashboardRoutes;
+use seed::prelude::wasm_bindgen::__rt::std::collections::HashMap;
+
+use crate::router::children::ExtractRoutes;
+use crate::router::route::Route;
 use crate::router::{ExtractedRoute, Router};
+use router_macro_derive::Routes;
 use strum::IntoEnumIterator;
 
 pub mod models;
@@ -41,7 +46,7 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     }
 }
 
-#[derive(EnumIter, EnumString, Debug, Display, Copy, EnumProperty, Clone, PartialEq)]
+#[derive(EnumIter, EnumString, Debug, Display, Copy, EnumProperty, Clone, PartialEq, Routes)]
 #[strum(serialize_all = "snake_case")]
 // need to make a derive (Routing) or something maybe
 pub enum Routes {

@@ -12,6 +12,7 @@ pub mod route;
 // ------ ------
 //     Urls
 // ------ ------
+use crate::router::children::ExtractRoutes;
 use heck::SnakeCase;
 use seed::{*, *};
 struct_urls!();
@@ -55,8 +56,9 @@ pub struct Router<Routes: IntoEnumIterator + Copy + Clone + PartialEq> {
 //         }
 //     }
 // }
-pub fn build<Routes: IntoEnumIterator + EnumProperty + Copy + Clone + PartialEq + Display>(
-) -> HashMap<String, Routes> {
+pub fn build<
+    Routes: IntoEnumIterator + EnumProperty + Copy + Clone + PartialEq + Display + ExtractRoutes,
+>() -> HashMap<String, Routes> {
     let mut hash_map = HashMap::new();
     for route in Routes::iter() {
         hash_map.insert(route.to_string(), route);
@@ -66,7 +68,7 @@ pub fn build<Routes: IntoEnumIterator + EnumProperty + Copy + Clone + PartialEq 
 
 #[derive(Debug)]
 pub struct ExtractedRoute<
-    Routes: IntoEnumIterator + EnumProperty + EnumProperty + Copy + Clone + PartialEq,
+    Routes: IntoEnumIterator + EnumProperty + EnumProperty + Copy + Clone + PartialEq + ExtractRoutes,
 > {
     pub url: Url,
     pub is_active: bool,
@@ -74,12 +76,20 @@ pub struct ExtractedRoute<
     pub route: Routes,
 }
 impl<
-        Routes: IntoEnumIterator + std::str::FromStr + EnumProperty + Copy + Clone + PartialEq + Display,
+        Routes: IntoEnumIterator
+            + std::str::FromStr
+            + EnumProperty
+            + Copy
+            + Clone
+            + PartialEq
+            + Display
+            + ExtractRoutes,
     > Router<Routes>
 {
     pub fn new() -> Router<Routes> {
         let mut hash_map: HashMap<String, Routes> = HashMap::new();
         let mut default_route: Option<Routes> = None;
+
         for route in Routes::iter() {
             if route.get_str("Children").is_some() {
                 let value = route.get_str("Children").unwrap();
