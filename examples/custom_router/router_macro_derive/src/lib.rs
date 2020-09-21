@@ -15,8 +15,8 @@ use syn::export::TokenStream2;
 use syn::punctuated::Iter;
 use syn::{Data, DataEnum, DeriveInput, Fields, Type, Variant};
 
-#[proc_macro_derive(MyProcMacro)]
-pub fn derive_my_proc_macro(input: TokenStream) -> TokenStream {
+#[proc_macro_derive(ToStruct)]
+pub fn derive_to_struct(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = syn::parse(input).unwrap();
     // Error out if we're not annotating an enum
     let data: DataEnum = match ast.data {
