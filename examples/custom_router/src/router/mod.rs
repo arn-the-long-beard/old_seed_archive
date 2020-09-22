@@ -211,38 +211,36 @@ impl<
     /// one just pushed into history before
     pub fn navigate_to_new(&mut self, route: Route) {
         self.current_route = Some(route.clone());
-        self.push_to_history(route.clone());
+        self.push_to_history(route);
     }
 
     /// Match the url that change and update the router with the new current
     /// Route
     fn navigate_to_url(&mut self, mut url: Url) {
-        let path_result = url.next_path_part();
-        if let Some(path) = path_result {
-            if let Some(route_match) = self.routes.get(path) {
-                self.navigate_to_new(route_match.clone());
-            } else {
-                self.navigate_to_new(self.default_route.clone());
-            }
+        let path_result = &url.next_path_part().unwrap().to_string();
+        let mut path = &mut url.to_string();
+        path.remove(0);
+        log!(path_result);
+        if let Some(route_match) = self.routes.get(path) {
+            log!("found route");
+            self.navigate_to_new(route_match.clone());
         } else {
+            log!("404");
+
             self.navigate_to_new(self.default_route.clone());
         }
-    }
-
-    pub fn url(&self, route: Route) -> Url {
-        route.url.expect("Should get the url")
     }
 
     pub fn request_moving_back<F: FnOnce(Url) -> R, R>(&mut self, func: F) {
         self.current_move = Move::IsMovingBack;
         if let Some(next_route) = &self.can_back_with_route() {
-            func(self.url(next_route.clone()));
+            func(next_route.clone().url.unwrap());
         }
     }
     pub fn request_moving_forward<F: FnOnce(Url) -> R, R>(&mut self, func: F) {
         self.current_move = Move::IsMovingForward;
         if let Some(next_route) = &self.can_forward_with_route() {
-            func(self.url(next_route.clone()));
+            func(next_route.clone().url.unwrap());
         }
     }
     pub fn base_url(&self) -> &Url {
@@ -275,11 +273,12 @@ impl<
             let path = hashed_route.0;
             let route = hashed_route.1.clone();
             let is_active = self.is_current_route(route.clone());
+            let url = route.clone().url;
             list.push(AvailableRoute {
-                url: self.url(route.clone()),
+                url: url.unwrap(),
                 path,
                 is_active,
-                route,
+                name: route.name,
             })
         }
         list
@@ -289,16 +288,17 @@ pub struct AvailableRoute {
     pub url: Url,
     pub is_active: bool,
     pub path: String,
-    pub route: Route,
+    pub name: String,
 }
 #[cfg(test)]
 mod test {
-    use crate::router::Router;
+    use crate::router::{Router, Urls};
     extern crate router_macro_derive;
 
     use crate::router::children::ExtractRoutes;
     use crate::router::route::Route;
     use router_macro_derive::Routes;
+    use seed::Url;
     use std::collections::HashMap;
     use std::str::FromStr;
     use strum::{EnumProperty, IntoEnumIterator};
@@ -386,6 +386,10 @@ mod test {
     fn test_build_router() {
         let router: Router<ExampleRoutes> = Router::new();
         let routes = router.routes;
+
+        for map in &routes {
+            println!("url : {:?} - Route {:?} ", map.0, map.1);
+        }
         assert_eq!(routes[""].path, ExampleRoutes::Home.to_string());
         assert_eq!(routes["login"].path, ExampleRoutes::Login.to_string());
         assert_eq!(routes.get("sdsadsda").is_none(), true);
@@ -398,22 +402,22 @@ mod test {
         let router: Router<ExampleRoutes> = Router::new();
         let url = router.base_url().clone().add_path_part("");
         let root_route = &router.routes[""].clone();
-        let url_from_router = router.url(root_route.clone());
-        assert_eq!(url_from_router.path(), url.path());
+        let url_from_new = Urls::build_url(Urls::new(Url::new()), "");
+        assert_eq!(url_from_new.path(), url.path());
         let url = router
             .base_url()
             .clone()
             .add_path_part("dashboard/other/other2");
 
         let other2_route = &router.routes["dashboard/other/other2"].clone();
-        let url_from_router = router.url(other2_route.clone());
+        let url_from_new = Urls::build_url(Urls::new(Url::new()), "dashboard/other/other2");
         // eprintln!("{:?}", url.path());
         // eprintln!("{:?}", url_from_router.path());
 
-        assert_eq!(url_from_router.path(), url.path());
+        assert_eq!(url_from_new.path(), url.path());
     }
     #[test]
-    fn test_navigation() {
+    fn test_navigation_to_route() {
         let mut router: Router<ExampleRoutes> = Router::new();
 
         router.navigate_to_new(router.routes[""].clone());
@@ -428,7 +432,38 @@ mod test {
             router.routes["login"]
         );
         assert_eq!(router.current_history_index, 1);
+        router.navigate_to_new(router.routes["dashboard/other/other2"].clone());
+
+        assert_eq!(
+            router.current_route.clone().unwrap(),
+            router.routes["dashboard/other/other2"].clone()
+        );
+        assert_eq!(router.current_history_index, 2);
     }
+    // #[test]
+    // fn test_navigation_to_url() {
+    //     let mut router: Router<ExampleRoutes> = Router::new();
+    //
+    //     router.navigate_to_url(router.routes[""].clone().url.unwrap());
+    //
+    //     assert_eq!(router.current_route.clone().unwrap(), router.routes[""]);
+    //     assert_eq!(router.current_history_index, 0);
+    //
+    //     router.navigate_to_url(router.routes["login"].clone().url.unwrap());
+    //
+    //     assert_eq!(
+    //         router.current_route.clone().unwrap(),
+    //         router.routes["login"]
+    //     );
+    //     assert_eq!(router.current_history_index, 1);
+    //     router.navigate_to_url(router.routes["dashboard/other/other2"].clone().url.unwrap());
+    //
+    //     assert_eq!(
+    //         router.current_route.clone().unwrap(),
+    //         router.routes["dashboard/other/other2"].clone()
+    //     );
+    //     assert_eq!(router.current_history_index, 2);
+    // }
     #[test]
     fn test_backward() {
         let mut router: Router<ExampleRoutes> = Router::new();
@@ -471,6 +506,15 @@ mod test {
         );
         assert_eq!(router.is_current_route(router.routes[""].clone()), true);
         router.navigate_to_new(router.routes["dashboard/other/other2"].clone());
+        assert_eq!(
+            router.is_current_route(router.routes["dashboard/other/other2"].clone()),
+            true
+        );
+        println!("{:?}", router.current_route);
+        println!(
+            "{:?}",
+            router.current_route.clone().unwrap().url.unwrap().path()
+        );
         println!("{:?}", router.current_history_index);
         let back = router.back();
         assert_eq!(back, true);
