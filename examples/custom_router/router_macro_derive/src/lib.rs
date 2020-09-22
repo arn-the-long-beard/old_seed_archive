@@ -76,17 +76,31 @@ pub fn routes(input: TokenStream) -> TokenStream {
     let mut extracted_routes = extract_routes(variants, name);
 
     let extract_route = quote! {
-              impl ExtractRoutes for #name {
-                 fn get_routes() -> HashMap<String,Route> {
-                 let mut hash_map: HashMap<String, Route> = HashMap::new();
-                 let future_routes  = vec![#(#extracted_routes)*];
-                 for r in future_routes {
-                       hash_map.insert(r.path.to_string(), r );
-                 }
-                   hash_map
-                }
+         impl ExtractRoutes for #name {
+        fn get_routes() -> Vec<Route> {
+            let mut vec : Vec<Route> = Vec::new();
+            let future_routes : Vec<Route>  = vec![#(#extracted_routes)*];
+            for r in future_routes {
+                vec.push(r);
             }
-    };
+            vec
+        }
+        fn get_hashed_routes() -> HashMap<String, Route> {
+            let mut hash_map: HashMap<String, Route> = HashMap::new();
+            let future_routes : Vec<Route>  = vec![#(#extracted_routes)*];
+                for r in  future_routes {
+                    hash_map.insert(r.path.to_string(), r.clone());
+
+                    for sub_hashed_route in r.extract_hashed_recursive_children() {
+                       hash_map.insert(format!("{}", sub_hashed_route.0 ), sub_hashed_route.1.clone());
+                    }
+
+                }
+            hash_map
+        }
+    }
+
+        };
 
     extract_route.into()
 }
@@ -95,7 +109,7 @@ fn extract_routes(variants: Iter<Variant>, name: &Ident) -> Vec<TokenStream2> {
     let mut extracted_routes = Vec::new();
     for v in variants {
         let var_id = &v.ident;
-
+        let route_name = var_id.to_string().to_snake_case();
         match &v.fields {
             Fields::Named(children) => {
                 let children_type = children.named.first().cloned().unwrap().ty.clone();
@@ -103,8 +117,8 @@ fn extract_routes(variants: Iter<Variant>, name: &Ident) -> Vec<TokenStream2> {
                 let tokens = quote! {
                         Route {
                         path: #path.to_string(),
+                        name: #route_name.to_string(),
                         children: #children_type::get_routes(),
-                        parent_route_path: "".to_string(),
                         guarded: false,
                         default: false,
                     },
@@ -115,9 +129,9 @@ fn extract_routes(variants: Iter<Variant>, name: &Ident) -> Vec<TokenStream2> {
                 let path = quote! {#name::#var_id};
                 let tokens = quote! {
                         Route {
-                       path: #path.to_string(),
-                         children: HashMap::new(),
-                        parent_route_path: "".to_string(),
+                        path: #path.to_string(),
+                        name: #route_name.to_string(),
+                        children: Vec::new(),
                         guarded: false,
                         default: false,
                     },
