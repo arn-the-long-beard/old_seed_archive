@@ -21,7 +21,7 @@ struct_urls!();
 /// Construct url injected in the web browser with path
 impl<'a> Urls<'a> {
     pub fn build_url(self, path: &str) -> Url {
-        self.base_url().add_path_part(path.to_snake_case())
+        self.base_url().add_path_part(path)
     }
 }
 // pub mod children;
@@ -34,7 +34,7 @@ pub enum Move {
 }
 
 pub struct Router<Routes: IntoEnumIterator + Copy + Clone + PartialEq> {
-    pub routes: Vec<Route>,
+    pub routes_before_init: Vec<Route>,
     pub current_route: Option<Route>,
     pub current_route_variant: Option<Routes>,
     pub current_history_index: usize,
@@ -43,7 +43,7 @@ pub struct Router<Routes: IntoEnumIterator + Copy + Clone + PartialEq> {
     pub current_move: Move,
     history: Vec<Route>,
     root_enum_routes: Vec<Routes>,
-    hashed_map_routes: HashMap<String, Route>,
+    routes: HashMap<String, Route>,
 }
 
 impl<
@@ -63,16 +63,25 @@ impl<
         for route in Routes::iter() {
             root_routes_vec.push(route)
         }
+        let mut routes = Routes::get_hashed_routes();
+        let base_url = Url::new();
+        let mut hashed_ready_route: HashMap<String, Route> = HashMap::new();
+        for map in routes {
+            let mut route_with_url = map.1.clone();
+            route_with_url.url = Some(Urls::new(base_url.clone()).build_url(map.0.as_str()));
+            hashed_ready_route.insert(map.0, route_with_url.clone());
+        }
+        // let new_hash =routes.map(||)
 
         Router {
             current_history_index: 0,
-            routes: Routes::get_routes(),
+            routes_before_init: Routes::get_routes(),
             default_route: Routes::get_default_route(),
             history: Vec::new(),
             current_route_variant: None,
             current_route: None,
             base_url: Url::new(), // should replace with current ,aybe ?
-            hashed_map_routes: Routes::get_hashed_routes(),
+            routes: hashed_ready_route,
             current_move: Move::IsReady,
             root_enum_routes: root_routes_vec,
         }
@@ -210,7 +219,7 @@ impl<
     fn navigate_to_url(&mut self, mut url: Url) {
         let path_result = url.next_path_part();
         if let Some(path) = path_result {
-            if let Some(route_match) = self.hashed_map_routes.get(path) {
+            if let Some(route_match) = self.routes.get(path) {
                 self.navigate_to_new(route_match.clone());
             } else {
                 self.navigate_to_new(self.default_route.clone());
@@ -221,7 +230,7 @@ impl<
     }
 
     pub fn url(&self, route: Route) -> Url {
-        Urls::new(&self.base_url).build_url(route.path.as_str())
+        route.url.expect("Should get the url")
     }
 
     pub fn request_moving_back<F: FnOnce(Url) -> R, R>(&mut self, func: F) {
@@ -262,7 +271,7 @@ impl<
     }
     pub fn mapped_routes(&self) -> Vec<AvailableRoute> {
         let mut list: Vec<AvailableRoute> = Vec::new();
-        for hashed_route in self.hashed_map_routes.clone() {
+        for hashed_route in self.routes.clone() {
             let path = hashed_route.0;
             let route = hashed_route.1.clone();
             let is_active = self.is_current_route(route.clone());
