@@ -91,7 +91,7 @@ fn extract_routes(variants: Iter<Variant>, name: &Ident) -> Vec<TokenStream2> {
                         name: #route_name.to_string(),
                         children: Vec::new(),
                         guarded: false,
-                        default: false,
+                        default: #name::#var_id.get_str("Default").is_some(),
                     },
                 };
                 extracted_routes.push(tokens);
