@@ -39,8 +39,8 @@ impl Clone for Route {
             path: self.path.to_string(),
             name: self.name.to_string(),
             children: self.children.clone(),
-            guarded: false,
-            default: false,
+            guarded: self.guarded,
+            default: self.default,
         }
     }
 }
