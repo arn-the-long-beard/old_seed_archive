@@ -50,7 +50,14 @@ impl Clone for Route {
 
 impl PartialEq for Route {
     fn eq(&self, other: &Self) -> bool {
-        self.path == other.path && self.name == other.name && self.children == other.children
+        if self.url.is_none() && other.url.is_none() {
+            self.path == other.path && self.name == other.name && self.children == other.children
+        } else {
+            self.url.clone().unwrap() == other.url.clone().unwrap()
+                && self.path == other.path
+                && self.name == other.name
+                && self.children == other.children
+        }
     }
 }
 #[cfg(test)]
