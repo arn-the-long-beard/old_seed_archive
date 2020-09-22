@@ -13,7 +13,9 @@ pub mod route;
 //     Urls
 // ------ ------
 use crate::router::children::ExtractRoutes;
+use crate::router::route::Route;
 use heck::SnakeCase;
+
 use seed::{*, *};
 struct_urls!();
 /// Construct url injected in the web browser with path
@@ -32,49 +34,51 @@ pub enum Move {
 }
 
 pub struct Router<Routes: IntoEnumIterator + Copy + Clone + PartialEq> {
-    pub routes: HashMap<String, Routes>,
-    pub current_route: Option<Routes>,
+    pub routes: Vec<Route>,
+    pub current_route: Option<Route>,
+    pub current_route_variant: Option<Routes>,
     pub current_history_index: usize,
-    pub default_route: Routes,
+    pub default_route: Route,
     base_url: Url,
     pub current_move: Move,
-    history: Vec<Routes>,
+    history: Vec<Route>,
+    root_enum_routes: Vec<Routes>,
+    hashed_map_routes: HashMap<String, Route>,
 }
 
-// pub struct RouteBuilder<Routes:  IntoEnumIterator+ Copy + Clone + PartialEq> {
-//     route: Routes,
-//     path: Option<String>,
-//     guard: Option<bool>,
-// }
-//
-// impl<Routes:  IntoEnumIterator+ Copy + Clone + PartialEq> RouteBuilder<Routes> {
-//     pub fn new(route: Routes) -> RouteBuilder<Routes> {
-//         RouteBuilder {
-//             route,
-//             path: None,
-//             guard: None,
-//         }
-//     }
-// }
-pub fn build<
-    Routes: IntoEnumIterator + EnumProperty + Copy + Clone + PartialEq + Display + ExtractRoutes,
->() -> HashMap<String, Routes> {
-    let mut hash_map = HashMap::new();
-    for route in Routes::iter() {
-        hash_map.insert(route.to_string(), route);
+impl<
+        Routes: IntoEnumIterator
+            + std::str::FromStr
+            + EnumProperty
+            + Copy
+            + Clone
+            + PartialEq
+            + Display
+            + ExtractRoutes,
+    > Default for Router<Routes>
+{
+    fn default() -> Self {
+        let mut root_routes_vec = Vec::new();
+
+        for route in Routes::iter() {
+            root_routes_vec.push(route)
+        }
+
+        Router {
+            current_history_index: 0,
+            routes: Routes::get_routes(),
+            default_route: Routes::get_default_route(),
+            history: Vec::new(),
+            current_route_variant: None,
+            current_route: None,
+            base_url: Url::new(), // should replace with current ,aybe ?
+            hashed_map_routes: Routes::get_hashed_routes(),
+            current_move: Move::IsReady,
+            root_enum_routes: root_routes_vec,
+        }
     }
-    hash_map
 }
 
-#[derive(Debug)]
-pub struct ExtractedRoute<
-    Routes: IntoEnumIterator + EnumProperty + EnumProperty + Copy + Clone + PartialEq + ExtractRoutes,
-> {
-    pub url: Url,
-    pub is_active: bool,
-    pub path: String,
-    pub route: Routes,
-}
 impl<
         Routes: IntoEnumIterator
             + std::str::FromStr
@@ -87,36 +91,7 @@ impl<
     > Router<Routes>
 {
     pub fn new() -> Router<Routes> {
-        let mut hash_map: HashMap<String, Routes> = HashMap::new();
-        let mut default_route: Option<Routes> = None;
-
-        for route in Routes::iter() {
-            if route.get_str("Children").is_some() {
-                let value = route.get_str("Children").unwrap();
-                // println!("{:?}", value);
-                // println!("{:?}", route.to_string());
-                hash_map.insert(route.to_string(), route);
-            } else {
-                hash_map.insert(route.to_string(), route);
-            }
-
-            if route.get_str("Default").is_some() {
-                default_route = Some(route);
-            }
-        }
-        if default_route.is_none() {
-            panic!("You need a default route for your routing to redirect when wrong url/path")
-        }
-        let def = default_route.unwrap();
-        Router {
-            current_history_index: 0,
-            routes: hash_map,
-            default_route: def,
-            history: Vec::new(),
-            current_route: None,
-            base_url: Url::new(), // should replace with current ,aybe ?
-            current_move: Move::IsReady,
-        }
+        Router::default()
     }
 
     pub fn set_base_url(&mut self, url: Url) -> &mut Self {
@@ -133,12 +108,12 @@ impl<
     //     let mut values = &self.routes.values();
     //     values.clone()
     // }
-    pub fn add_route(&mut self, route: Routes, value: &str) -> &mut Self {
-        self.routes.insert(value.to_string(), route);
-        self
-    }
+    // pub fn add_route(&mut self, route: Routes, value: &str) -> &mut Self {
+    //     self.routes.insert(value.to_string(), route);
+    //     self
+    // }
 
-    fn push_to_history(&mut self, route: Routes) {
+    fn push_to_history(&mut self, route: Route) {
         self.history.push(route);
         self.current_history_index = self.history.len() - 1;
     }
@@ -156,7 +131,7 @@ impl<
     }
 
     /// Check if you can go back in history and give you the right route
-    pub fn can_back_with_route(&self) -> Option<Routes> {
+    pub fn can_back_with_route(&self) -> Option<Route> {
         // If we have no history, cannot go back
 
         if self.history.is_empty() {
@@ -168,7 +143,7 @@ impl<
         }
         let next_index = self.current_history_index - 1;
         let route = self.history.get(next_index).unwrap();
-        Some(*route)
+        Some(route.clone())
     }
 
     pub fn can_back(&self) -> bool {
@@ -179,7 +154,7 @@ impl<
     }
 
     /// Check if you can navigate forward in the history
-    pub fn can_forward_with_route(&self) -> Option<Routes> {
+    pub fn can_forward_with_route(&self) -> Option<Route> {
         // if there is no route, cannot go forward
         if self.history.is_empty() {
             return None;
@@ -196,7 +171,7 @@ impl<
                 next_index
             )
         });
-        Some(*route)
+        Some(route.clone())
     }
 
     /// to move forward in the history
@@ -211,8 +186,8 @@ impl<
         }
     }
 
-    pub fn is_current_route(&self, route: Routes) -> bool {
-        if let Some(current_route) = self.current_route {
+    pub fn is_current_route(&self, route: Route) -> bool {
+        if let Some(current_route) = self.current_route.clone() {
             route.eq(&current_route)
         } else {
             false
@@ -225,9 +200,9 @@ impl<
     /// This will push to history. So If you go back multiple time and then use
     /// navigate and then go back, you will not get the previous page, but the
     /// one just pushed into history before
-    pub fn navigate_to_new(&mut self, route: Routes) {
-        self.current_route = Some(route);
-        self.push_to_history(route);
+    pub fn navigate_to_new(&mut self, route: Route) {
+        self.current_route = Some(route.clone());
+        self.push_to_history(route.clone());
     }
 
     /// Match the url that change and update the router with the new current
@@ -235,30 +210,30 @@ impl<
     fn navigate_to_url(&mut self, mut url: Url) {
         let path_result = url.next_path_part();
         if let Some(path) = path_result {
-            if let Some(route_match) = self.mapped_routes().iter().find(|r| r.path == path) {
-                self.navigate_to_new(route_match.route);
+            if let Some(route_match) = self.hashed_map_routes.get(path) {
+                self.navigate_to_new(route_match.clone());
             } else {
-                self.navigate_to_new(self.default_route);
+                self.navigate_to_new(self.default_route.clone());
             }
         } else {
-            self.navigate_to_new(self.default_route);
+            self.navigate_to_new(self.default_route.clone());
         }
     }
 
-    pub fn url(&self, route: Routes) -> Url {
-        Urls::new(&self.base_url).build_url(route.to_string().as_str())
+    pub fn url(&self, route: Route) -> Url {
+        Urls::new(&self.base_url).build_url(route.path.as_str())
     }
 
     pub fn request_moving_back<F: FnOnce(Url) -> R, R>(&mut self, func: F) {
         self.current_move = Move::IsMovingBack;
         if let Some(next_route) = &self.can_back_with_route() {
-            func(self.url(*next_route));
+            func(self.url(next_route.clone()));
         }
     }
     pub fn request_moving_forward<F: FnOnce(Url) -> R, R>(&mut self, func: F) {
         self.current_move = Move::IsMovingForward;
         if let Some(next_route) = &self.can_forward_with_route() {
-            func(self.url(*next_route));
+            func(self.url(next_route.clone()));
         }
     }
     pub fn base_url(&self) -> &Url {
@@ -285,14 +260,14 @@ impl<
         }
         self.current_move = Move::IsReady;
     }
-    pub fn mapped_routes(&self) -> Vec<ExtractedRoute<Routes>> {
-        let mut list: Vec<ExtractedRoute<Routes>> = Vec::new();
-        for route in Routes::iter() {
-            let path = route.to_string();
-            println!(" path ---> {:?}", path);
-            let is_active = self.is_current_route(route);
-            list.push(ExtractedRoute {
-                url: self.url(route),
+    pub fn mapped_routes(&self) -> Vec<AvailableRoute> {
+        let mut list: Vec<AvailableRoute> = Vec::new();
+        for hashed_route in self.hashed_map_routes.clone() {
+            let path = hashed_route.0;
+            let route = hashed_route.1.clone();
+            let is_active = self.is_current_route(route.clone());
+            list.push(AvailableRoute {
+                url: self.url(route.clone()),
                 path,
                 is_active,
                 route,
@@ -301,7 +276,12 @@ impl<
         list
     }
 }
-
+pub struct AvailableRoute {
+    pub url: Url,
+    pub is_active: bool,
+    pub path: String,
+    pub route: Route,
+}
 #[cfg(test)]
 mod test {
     use crate::router::Router;
