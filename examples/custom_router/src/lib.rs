@@ -1,12 +1,8 @@
-#![feature(map_into_keys_values)]
-#![feature(box_syntax)]
-
 mod request;
 use seed::{prelude::*, *};
 extern crate heck;
 use crate::models::user::LoggedUser;
 use crate::{theme::Theme, top_bar::TopBar};
-use heck::SnakeCase;
 extern crate strum;
 #[macro_use]
 extern crate strum_macros;
@@ -17,7 +13,6 @@ use crate::router::children::ExtractRoutes;
 use crate::router::route::Route;
 use crate::router::{ExtractedRoute, Router};
 use router_macro_derive::Routes;
-use strum::IntoEnumIterator;
 
 pub mod models;
 mod pages;
