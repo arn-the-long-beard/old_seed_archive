@@ -99,7 +99,6 @@ fn extract_routes(variants: Iter<Variant>, name: &Ident) -> Vec<TokenStream2> {
         match &v.fields {
             Fields::Named(children) => {
                 let children_type = children.named.first().cloned().unwrap().ty.clone();
-                println!("SUUUUUUUUUUUUUUUUUUUUUUUB_Routes");
                 let path = quote! {#name::#var_id{ children : Default::default()}};
                 let tokens = quote! {
                         Route {
