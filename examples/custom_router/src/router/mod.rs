@@ -352,37 +352,40 @@ mod test {
             // println!("the route is {:?}", route);
             // println!("stuff {:?}", answer());
         }
-
         assert_eq!(ExampleRoutes::iter().len(), 6);
     }
     #[test]
-    fn test_routes_generation() {
+    fn test_root_routes_generation() {
         let hashed_mapped_routes = ExampleRoutes::get_hashed_routes();
         for map in &hashed_mapped_routes {
             println!("url : {:?} - Route {:?} ", map.0, map.1);
         }
-
-        eprintln!("----------------");
-
-        // let routes = ExampleRoutes::get_routes();
-
-        // for route in &routes {
-        //     eprintln!("{:?}", route);
-        // }
-        //
-        // let hashed_mapped_dashboard_routes = DashboardRoutes::get_hashed_routes();
-        // for map in &hashed_mapped_dashboard_routes {
-        //     eprintln!("{:?}", map);
-        // }
-
         let len: u8 = hashed_mapped_routes.len() as u8;
         assert_eq!(len, 10);
+    }
+    #[test]
+    fn test_children_routes_generation() {
+        let hashed_mapped_routes = DashboardRoutes::get_hashed_routes();
+        for map in &hashed_mapped_routes {
+            println!("url : {:?} - Route {:?} ", map.0, map.1);
+        }
+        let len: u8 = hashed_mapped_routes.len() as u8;
+        assert_eq!(len, 4);
+    }
+    #[test]
+    fn test_great_children_routes_generation() {
+        let hashed_mapped_routes = DashboardAdminRoutes::get_hashed_routes();
+        for map in &hashed_mapped_routes {
+            println!("url : {:?} - Route {:?} ", map.0, map.1);
+        }
+        let len: u8 = hashed_mapped_routes.len() as u8;
+        assert_eq!(len, 2);
     }
 
     #[test]
     fn test_build_router() {
         let router: Router<ExampleRoutes> = Router::new();
-        let routes = router.hashed_map_routes;
+        let routes = router.routes;
         assert_eq!(routes[""].path, ExampleRoutes::Home.to_string());
         assert_eq!(routes["login"].path, ExampleRoutes::Login.to_string());
         assert_eq!(routes.get("sdsadsda").is_none(), true);
@@ -390,127 +393,135 @@ mod test {
         assert_eq!(router.default_route, routes["not_found"])
     }
 
-    // #[test]
-    // fn test_build_url() {
-    //     let mut router: Router<ExampleRoutes> = Router::new();
-    //
-    //     router
-    //         .add_route(ExampleRoutes::Home, "home")
-    //         .add_route(ExampleRoutes::Login, "login");
-    //
-    //     let url = router.base_url().clone().add_path_part("");
-    //     let url_from_router = router.url(ExampleRoutes::Home);
-    //
-    //     // eprintln!("{:?}", url.path());
-    //     // eprintln!("{:?}", url_from_router.path());
-    //
-    //     assert_eq!(url_from_router.path(), url.path());
-    // }
-    // #[test]
-    // fn test_navigation() {
-    //     let mut router: Router<ExampleRoutes> = Router::new();
-    //
-    //     router
-    //         .add_route(ExampleRoutes::Home, "")
-    //         .add_route(ExampleRoutes::Login, "login");
-    //
-    //     router.navigate_to_new(ExampleRoutes::Home);
-    //
-    //     let is_home = matches!(router.current_route.unwrap(), ExampleRoutes::Home);
-    //
-    //     assert_eq!(is_home, true);
-    //     assert_eq!(router.current_history_index, 0);
-    //
-    //     router.navigate_to_new(ExampleRoutes::Login);
-    //
-    //     let is_home = matches!(router.current_route.unwrap(), ExampleRoutes::Home);
-    //
-    //     assert_eq!(is_home, false);
-    //     assert_eq!(router.current_history_index, 1);
-    // }
-    // #[test]
-    // fn test_backward() {
-    //     let mut router: Router<ExampleRoutes> = Router::new();
-    //
-    //     router
-    //         .add_route(ExampleRoutes::Home, "home")
-    //         .add_route(ExampleRoutes::Login, "login")
-    //         .add_route(ExampleRoutes::Register, "register")
-    //         .add_route(ExampleRoutes::Stuff, "stuff");
-    //
-    //     let back = router.back();
-    //     assert_eq!(back, false, "We should Not have gone backwards");
-    //     assert_eq!(
-    //         router.current_history_index, 0,
-    //         "We should have current index 0"
-    //     );
-    //     assert_eq!(
-    //         router.current_route.is_none(),
-    //         true,
-    //         "We should not have current rou"
-    //     );
-    //
-    //     router.navigate_to_new(ExampleRoutes::Home);
-    //     router.navigate_to_new(ExampleRoutes::Register);
-    //     router.navigate_to_new(ExampleRoutes::Login);
-    //
-    //     assert_eq!(router.current_history_index, 2);
-    //
-    //     let back = router.back();
-    //     assert_eq!(back, true, "We should have gone backwards");
-    //     assert_eq!(router.current_history_index, 1);
-    //     assert_eq!(router.current_route.unwrap(), ExampleRoutes::Register);
-    //     assert_eq!(router.is_current_route(ExampleRoutes::Register), true);
-    //     let back = router.back();
-    //     assert_eq!(back, true, "We should have gone backwards");
-    //     assert_eq!(router.current_history_index, 0);
-    //     assert_eq!(router.current_route.unwrap(), ExampleRoutes::Home);
-    //     assert_eq!(router.is_current_route(ExampleRoutes::Home), true);
-    //     router.navigate_to_new(ExampleRoutes::Stuff);
-    //     println!("{:?}", router.current_history_index);
-    //     let back = router.back();
-    //     assert_eq!(back, true);
-    //     // Here is tricky part, after navigate we go back to the end of history, so if
-    //     // we go back, we go to the previous index
-    //     assert_eq!(router.current_history_index, 2);
-    //     assert_eq!(router.current_route.unwrap(), ExampleRoutes::Login);
-    // }
-    //
-    // #[test]
-    // fn test_forward() {
-    //     let mut router: Router<ExampleRoutes> = Router::new();
-    //
-    //     let back = router.back();
-    //     assert_eq!(back, false, "We should Not have gone backwards");
-    //     assert_eq!(
-    //         router.current_history_index, 0,
-    //         "We should have current index 0"
-    //     );
-    //     assert_eq!(
-    //         router.current_route.is_none(),
-    //         true,
-    //         "We should not have current rou"
-    //     );
-    //
-    //     router.navigate_to_new(ExampleRoutes::Home);
-    //     router.navigate_to_new(ExampleRoutes::Register);
-    //     router.navigate_to_new(ExampleRoutes::Login);
-    //
-    //     assert_eq!(router.current_history_index, 2);
-    //
-    //     let back = router.back();
-    //     let back = router.back();
-    //
-    //     let forward = router.forward();
-    //     assert_eq!(forward, true, "We should have gone forward");
-    //     assert_eq!(router.current_history_index, 1);
-    //     assert_eq!(router.current_route.unwrap(), ExampleRoutes::Register);
-    //
-    //     let forward = router.forward();
-    //     assert_eq!(forward, true, "We should have gone forward");
-    //     assert_eq!(router.current_history_index, 2);
-    //     assert_eq!(router.current_route.unwrap(), ExampleRoutes::Login);
-    //     let forward = router.forward();
-    //     assert_eq!(forward, false, "We should Not have gone forward");
-    // }
+    #[test]
+    fn test_build_url() {
+        let router: Router<ExampleRoutes> = Router::new();
+        let url = router.base_url().clone().add_path_part("");
+        let root_route = &router.routes[""].clone();
+        let url_from_router = router.url(root_route.clone());
+        assert_eq!(url_from_router.path(), url.path());
+        let url = router
+            .base_url()
+            .clone()
+            .add_path_part("dashboard/other/other2");
+
+        let other2_route = &router.routes["dashboard/other/other2"].clone();
+        let url_from_router = router.url(other2_route.clone());
+        // eprintln!("{:?}", url.path());
+        // eprintln!("{:?}", url_from_router.path());
+
+        assert_eq!(url_from_router.path(), url.path());
+    }
+    #[test]
+    fn test_navigation() {
+        let mut router: Router<ExampleRoutes> = Router::new();
+
+        router.navigate_to_new(router.routes[""].clone());
+
+        assert_eq!(router.current_route.clone().unwrap(), router.routes[""]);
+        assert_eq!(router.current_history_index, 0);
+
+        router.navigate_to_new(router.routes["login"].clone());
+
+        assert_eq!(
+            router.current_route.clone().unwrap(),
+            router.routes["login"]
+        );
+        assert_eq!(router.current_history_index, 1);
+    }
+    #[test]
+    fn test_backward() {
+        let mut router: Router<ExampleRoutes> = Router::new();
+
+        let back = router.back();
+        assert_eq!(back, false, "We should Not have gone backwards");
+        assert_eq!(
+            router.current_history_index, 0,
+            "We should have current index 0"
+        );
+        assert_eq!(
+            router.current_route.is_none(),
+            true,
+            "We should not have current rou"
+        );
+
+        router.navigate_to_new(router.routes[""].clone());
+        router.navigate_to_new(router.routes["register"].clone());
+        router.navigate_to_new(router.routes["dashboard/other/other2"].clone());
+
+        assert_eq!(router.current_history_index, 2);
+
+        let back = router.back();
+        assert_eq!(back, true, "We should have gone backwards");
+        assert_eq!(router.current_history_index, 1);
+        assert_eq!(
+            router.current_route.clone().unwrap(),
+            router.routes["register"].clone()
+        );
+        assert_eq!(
+            router.is_current_route(router.routes["register"].clone()),
+            true
+        );
+        let back = router.back();
+        assert_eq!(back, true, "We should have gone backwards");
+        assert_eq!(router.current_history_index, 0);
+        assert_eq!(
+            router.current_route.clone().unwrap(),
+            router.routes[""].clone()
+        );
+        assert_eq!(router.is_current_route(router.routes[""].clone()), true);
+        router.navigate_to_new(router.routes["dashboard/other/other2"].clone());
+        println!("{:?}", router.current_history_index);
+        let back = router.back();
+        assert_eq!(back, true);
+        // Here is tricky part, after navigate we go back to the end of history, so if
+        // we go back, we go to the previous index
+        assert_eq!(router.current_history_index, 2);
+        assert_eq!(
+            router.current_route.clone().unwrap(),
+            router.routes["dashboard/other/other2"]
+        );
+    }
+
+    #[test]
+    fn test_forward() {
+        let mut router: Router<ExampleRoutes> = Router::new();
+
+        let back = router.back();
+        assert_eq!(back, false, "We should Not have gone backwards");
+        assert_eq!(
+            router.current_history_index, 0,
+            "We should have current index 0"
+        );
+        assert_eq!(
+            router.current_route.is_none(),
+            true,
+            "We should not have current rou"
+        );
+        router.navigate_to_new(router.routes[""].clone());
+        router.navigate_to_new(router.routes["register"].clone());
+        router.navigate_to_new(router.routes["login"].clone());
+        assert_eq!(router.current_history_index, 2);
+
+        let back = router.back();
+        let back = router.back();
+
+        let forward = router.forward();
+        assert_eq!(forward, true, "We should have gone forward");
+        assert_eq!(router.current_history_index, 1);
+        assert_eq!(
+            router.current_route.clone().unwrap(),
+            router.routes["register"].clone()
+        );
+
+        let forward = router.forward();
+        assert_eq!(forward, true, "We should have gone forward");
+        assert_eq!(router.current_history_index, 2);
+        assert_eq!(
+            router.current_route.clone().unwrap(),
+            router.routes["login"].clone()
+        );
+        let forward = router.forward();
+        assert_eq!(forward, false, "We should Not have gone forward");
+    }
 }
