@@ -123,10 +123,17 @@ mod test {
 
         let hashed_routes = root.extract_hashed_recursive_children();
 
+        let mut string_hashmap = "".to_string();
         for route in &hashed_routes {
             println!("url : {:?} - Route {:?} ", route.0, route.1);
+            string_hashmap += (format!("url : {} - Route {:?} ", route.0, route.1)
+                .as_str()
+                .to_owned()
+                + "\n")
+                .as_str();
         }
         let len: u8 = hashed_routes.len() as u8;
+        eprintln!("{:?}", string_hashmap);
 
         assert_eq!(hashed_routes["/admin/dashboard/private"], private);
         assert_eq!(hashed_routes["/admin/dashboard/random"], random_page);
