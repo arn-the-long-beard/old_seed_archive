@@ -316,10 +316,26 @@ mod test {
 
     #[derive(EnumIter, EnumString, EnumProperty, Display, Debug, Copy, Clone, PartialEq, Routes)]
     #[strum(serialize_all = "snake_case")]
-    pub enum DashboardRoutes {
+    pub enum DashboardAdminRoutes {
+        #[strum(serialize = "")]
         #[strum(props(Default = "true"))]
         Root,
         Other,
+    }
+    impl Default for DashboardAdminRoutes {
+        fn default() -> DashboardAdminRoutes {
+            DashboardAdminRoutes::Root
+        }
+    }
+    #[derive(EnumIter, EnumString, EnumProperty, Display, Debug, Copy, Clone, PartialEq, Routes)]
+    #[strum(serialize_all = "snake_case")]
+    pub enum DashboardRoutes {
+        #[strum(props(Default = "true"))]
+        #[strum(serialize = "")]
+        Root,
+        Other {
+            children: DashboardAdminRoutes,
+        },
     }
 
     impl Default for DashboardRoutes {
@@ -356,29 +372,8 @@ mod test {
 
         let routes = router.routes.clone();
 
-        // let dashboard = DashboardRoute {
-        //     children: DashboardRoutes::Root,
-        // };
-        // let sub_routes = dashboard.children();
-
-        // assert_eq!(sub_routes, DashboardRoutes::Root);
-
-        // let stuff = dashboard.get_children();
-        // dashboard.get_children();
-
-        // let shoe :  = Shoes {
-        //     yes: "nice".to_string(),
-        // };
-
         assert_eq!(router.routes[""], ExampleRoutes::Home);
         assert_eq!(router.routes["login"], ExampleRoutes::Login);
-        // assert_eq!(
-        //     router.routes["dashboard"],
-        //     ExampleRoutes::Dashboard {
-        //         children: Default::default()
-        //     }
-        // );
-
         assert_eq!(router.default_route, ExampleRoutes::NotFound);
         let r = ExampleRoutes::from_str("login").unwrap();
         let path = ExampleRoutes::Home.to_string();
@@ -390,7 +385,8 @@ mod test {
         }
         .to_string();
         assert_eq!(dashboard, "dashboard");
-        let routes: HashMap<String, Route> = ExampleRoutes::get_routes();
+
+        let routes: HashMap<String, Route> = ExampleRoutes::get_hashed_routes();
         let sub_routes = DashboardRoutes::get_routes();
 
         if !routes["dashboard"].children.is_empty() {
@@ -398,6 +394,7 @@ mod test {
         }
         for r in routes {
             println!(" parent routes {:?}", r);
+            if !r.1.children.is_empty() {}
         }
 
         for s_r in sub_routes {
@@ -406,7 +403,7 @@ mod test {
 
         let fake_route = Route {
             path: "fake".to_string(),
-            parent_route_path: "".to_string(),
+            name: "fake".to_string(),
             children: ExampleRoutes::get_routes(),
             guarded: false,
             default: false,
