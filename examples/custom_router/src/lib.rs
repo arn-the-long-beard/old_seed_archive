@@ -11,14 +11,15 @@ use seed::prelude::wasm_bindgen::__rt::std::collections::HashMap;
 
 use crate::router::children::ExtractRoutes;
 use crate::router::route::Route;
-use crate::router::{ExtractedRoute, Router};
+use crate::router::{AvailableRoute, Router};
 use router_macro_derive::Routes;
-
+use std::str::FromStr;
 pub mod models;
 mod pages;
 pub mod router;
 mod theme;
 mod top_bar;
+use strum::{EnumProperty, IntoEnumIterator};
 
 // ------ ------
 //     Init
@@ -41,7 +42,7 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     }
 }
 
-#[derive(EnumIter, EnumString, Debug, Display, Copy, EnumProperty, Clone, PartialEq, Routes)]
+#[derive(EnumIter, EnumString, EnumProperty, Display, Debug, Copy, Clone, PartialEq, Routes)]
 #[strum(serialize_all = "snake_case")]
 // need to make a derive (Routing) or something maybe
 pub enum Routes {
@@ -151,7 +152,7 @@ fn view(model: &Model) -> impl IntoNodes<Msg> {
     if model.logged_user.is_none() {
         vec![
             header(&model),
-            if let Some(route) = &model.router.current_route {
+            if let Some(route) = &model.router.current_route_variant {
                 match route {
                     Routes::Home => home(&model.theme),
                     // Page::Admin(admin_model) => page::admin::view(admin_model, &model.ctx),
@@ -217,7 +218,7 @@ fn header(model: &Model) -> Node<Msg> {
 }
 //
 
-fn render_route(route: &ExtractedRoute<Routes>) -> Node<Msg> {
+fn render_route(route: &AvailableRoute) -> Node<Msg> {
     li![a![
         C!["route", IF!( route.is_active => "active-route" )],
         attrs! { At::Href => route.url },
