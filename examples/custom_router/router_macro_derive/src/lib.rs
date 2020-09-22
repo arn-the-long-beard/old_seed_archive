@@ -16,48 +16,6 @@ use syn::export::TokenStream2;
 use syn::punctuated::Iter;
 use syn::{Data, DataEnum, DeriveInput, Fields, Type, Variant};
 
-#[proc_macro_derive(ToStruct)]
-pub fn derive_to_struct(input: TokenStream) -> TokenStream {
-    let ast: DeriveInput = syn::parse(input).unwrap();
-    // Error out if we're not annotating an enum
-    let data: DataEnum = match ast.data {
-        Data::Enum(d) => d,
-        _ => panic!("My structs can only be derived for enums"),
-    };
-    let variants = data.variants.iter();
-    let variant_structs = variants.map(|v| {
-        let var_id = &v.ident;
-
-        let strut_name = format_ident!("{}Route", var_id);
-
-        let fields = v.fields.clone().into_token_stream();
-
-        match &v.fields {
-            Fields::Named(children) => {
-                let children_type = children.named.first().cloned().unwrap().ty.clone();
-                quote! {
-                    pub struct #strut_name #fields
-                    impl #strut_name {
-                            pub fn children(&self) -> #children_type {
-                                 self.children
-                            }
-                    }
-                }
-            }
-            _ => {
-                quote! {
-                    pub struct #strut_name #fields;
-                }
-            } /* Implement traits for the new struct and stuff */
-        }
-    });
-    let gen = quote! {
-        #(#variant_structs)*
-    };
-
-    println!("{:?}", gen);
-    gen.into()
-}
 #[proc_macro_derive(Routes)]
 pub fn routes(input: TokenStream) -> TokenStream {
     // Parse the Input
