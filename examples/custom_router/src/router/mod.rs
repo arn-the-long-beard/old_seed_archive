@@ -319,12 +319,12 @@ mod test {
     pub enum DashboardAdminRoutes {
         #[strum(serialize = "")]
         #[strum(props(Default = "true"))]
-        Root,
-        Other,
+        DashRoot,
+        Other2,
     }
     impl Default for DashboardAdminRoutes {
         fn default() -> DashboardAdminRoutes {
-            DashboardAdminRoutes::Root
+            DashboardAdminRoutes::DashRoot
         }
     }
     #[derive(EnumIter, EnumString, EnumProperty, Display, Debug, Copy, Clone, PartialEq, Routes)]
@@ -367,50 +367,36 @@ mod test {
         assert_eq!(ExampleRoutes::iter().len(), 6);
     }
     #[test]
+    fn test_routes_generation() {
+        let hashed_mapped_routes = ExampleRoutes::get_hashed_routes();
+        for map in &hashed_mapped_routes {
+            println!("url : {:?} - Route {:?} ", map.0, map.1);
+        }
+
+        eprintln!("----------------");
+
+        // let routes = ExampleRoutes::get_routes();
+
+        // for route in &routes {
+        //     eprintln!("{:?}", route);
+        // }
+        //
+        // let hashed_mapped_dashboard_routes = DashboardRoutes::get_hashed_routes();
+        // for map in &hashed_mapped_dashboard_routes {
+        //     eprintln!("{:?}", map);
+        // }
+
+        let len: u8 = hashed_mapped_routes.len() as u8;
+        assert_eq!(len, 10);
+    }
+
+    #[test]
     fn test_build_router() {
         let router: Router<ExampleRoutes> = Router::new();
-
         let routes = router.routes.clone();
-
         assert_eq!(router.routes[""], ExampleRoutes::Home);
         assert_eq!(router.routes["login"], ExampleRoutes::Login);
         assert_eq!(router.default_route, ExampleRoutes::NotFound);
-        let r = ExampleRoutes::from_str("login").unwrap();
-        let path = ExampleRoutes::Home.to_string();
-
-        assert_eq!(path, "");
-
-        let dashboard = ExampleRoutes::Dashboard {
-            children: Default::default(),
-        }
-        .to_string();
-        assert_eq!(dashboard, "dashboard");
-
-        let routes: HashMap<String, Route> = ExampleRoutes::get_hashed_routes();
-        let sub_routes = DashboardRoutes::get_routes();
-
-        if !routes["dashboard"].children.is_empty() {
-            eprintln!("{:?}", routes["dashboard"].children)
-        }
-        for r in routes {
-            println!(" parent routes {:?}", r);
-            if !r.1.children.is_empty() {}
-        }
-
-        for s_r in sub_routes {
-            println!(" children routes {:?}", s_r);
-        }
-
-        let fake_route = Route {
-            path: "fake".to_string(),
-            name: "fake".to_string(),
-            children: ExampleRoutes::get_routes(),
-            guarded: false,
-            default: false,
-        };
-        println!("fake route {:?}", fake_route);
-
-        assert_eq!(router.routes["login"], r);
     }
 
     #[test]
