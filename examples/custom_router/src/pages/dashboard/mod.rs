@@ -10,6 +10,7 @@ use router_macro_derive::Routes;
 use strum::{EnumProperty, IntoEnumIterator};
 
 #[derive(EnumIter, EnumString, EnumProperty, Display, Debug, Copy, Clone, PartialEq, Routes)]
+#[strum(serialize_all = "snake_case")]
 pub enum DashboardRoutes {
     #[strum(props(Default = "true"))]
     Root,

@@ -49,7 +49,10 @@ pub enum Routes {
     Home,
     Login,
     Register,
-    Dashboard { children: DashboardRoutes },
+    Dashboard {
+        children: DashboardRoutes,
+    },
+    #[strum(props(Default = "true"))]
     NotFound,
     // Admin(page::admin::Model),
 }
@@ -102,6 +105,7 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::UrlRequested(request) => {
             log!("URL requested");
+
             // let url = request.0;
 
             //side effect is bad i think
@@ -222,7 +226,7 @@ fn render_route(route: &AvailableRoute) -> Node<Msg> {
     li![a![
         C!["route", IF!( route.is_active => "active-route" )],
         attrs! { At::Href => route.url },
-        route.path.clone(),
+        &route.name,
     ]]
 }
 // // /// Render a route
