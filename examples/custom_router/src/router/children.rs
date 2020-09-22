@@ -3,6 +3,7 @@ use std::collections::HashMap;
 
 pub trait ExtractRoutes {
     fn get_routes() -> Vec<Route>;
+    /// This method get the children routes in hash as well recursively
     fn get_hashed_routes() -> HashMap<String, Route>;
     fn get_default_route() -> Route {
         let routes = Self::get_routes();

@@ -76,6 +76,7 @@ fn extract_routes(variants: Iter<Variant>, name: &Ident) -> Vec<TokenStream2> {
                         Route {
                         path: #path.to_string(),
                         name: #route_name.to_string(),
+                        url :None,
                         children: #children_type::get_routes(),
                         guarded: false,
                         default: false,
@@ -89,6 +90,7 @@ fn extract_routes(variants: Iter<Variant>, name: &Ident) -> Vec<TokenStream2> {
                         Route {
                         path: #path.to_string(),
                         name: #route_name.to_string(),
+                        url :None,
                         children: Vec::new(),
                         guarded: false,
                         default: #name::#var_id.get_str("Default").is_some(),

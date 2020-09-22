@@ -1,8 +1,10 @@
 use seed::prelude::wasm_bindgen::__rt::std::collections::HashMap;
+use seed::Url;
 
 #[derive(Debug)]
 pub struct Route {
     pub path: String,
+    pub url: Option<Url>,
     pub name: String,
     pub children: Vec<Route>,
     pub guarded: bool,
@@ -38,6 +40,7 @@ impl Clone for Route {
         Route {
             path: self.path.to_string(),
             name: self.name.to_string(),
+            url: self.url.clone(),
             children: self.children.clone(),
             guarded: self.guarded,
             default: self.default,
@@ -58,6 +61,7 @@ mod test {
     fn test_hash_extraction() {
         let random_page = Route {
             path: "random".to_string(),
+            url: None,
             name: "random".to_string(),
             children: vec![],
             guarded: false,
@@ -65,6 +69,7 @@ mod test {
         };
         let random_page_2 = Route {
             path: "random_2".to_string(),
+            url: None,
             name: "random_2".to_string(),
             children: vec![],
             guarded: false,
@@ -72,6 +77,7 @@ mod test {
         };
         let random_page_3 = Route {
             path: "random_3".to_string(),
+            url: None,
             name: "random_3".to_string(),
             children: vec![],
             guarded: false,
@@ -79,6 +85,7 @@ mod test {
         };
         let private = Route {
             path: "private".to_string(),
+            url: None,
             name: "private".to_string(),
             children: vec![],
             guarded: false,
@@ -86,6 +93,7 @@ mod test {
         };
         let dashboard = Route {
             path: "dashboard".to_string(),
+            url: None,
             name: "dashboard".to_string(),
             children: vec![private.clone(), random_page.clone()],
             guarded: false,
@@ -94,6 +102,7 @@ mod test {
 
         let not_found = Route {
             path: "not_found".to_string(),
+            url: None,
             name: "not_found".to_string(),
             children: vec![],
             guarded: false,
@@ -101,6 +110,7 @@ mod test {
         };
         let admin = Route {
             path: "admin".to_string(),
+            url: None,
             name: "admin".to_string(),
             children: vec![dashboard.clone()],
             guarded: true,
@@ -109,6 +119,7 @@ mod test {
 
         let root = Route {
             path: "".to_string(),
+            url: None,
             name: "root".to_string(),
             children: vec![
                 admin.clone(),
