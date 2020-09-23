@@ -217,10 +217,9 @@ impl<
     /// Match the url that change and update the router with the new current
     /// Route
     fn navigate_to_url(&mut self, mut url: Url) {
-        let path_result = &url.next_path_part().unwrap().to_string();
         let mut path = &mut url.to_string();
         path.remove(0);
-        log!(path_result);
+
         if let Some(route_match) = self.routes.get(path) {
             log!("found route");
             self.navigate_to_new(route_match.clone());
