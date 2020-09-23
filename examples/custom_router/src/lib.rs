@@ -46,6 +46,7 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
 #[strum(serialize_all = "snake_case")]
 // need to make a derive (Routing) or something maybe
 pub enum Routes {
+    #[strum(serialize = "")]
     Home,
     Login,
     Register,
