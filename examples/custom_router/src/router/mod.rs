@@ -211,20 +211,34 @@ impl<
     /// one just pushed into history before
     pub fn navigate_to_new(&mut self, route: Route) {
         self.current_route = Some(route.clone());
-        self.push_to_history(route);
+        self.push_to_history(route.clone());
+        if let Some(url) = route.url {
+            eprintln!("{:?}", url.path())
+            // let path = url.hash_path();
+            // if path.len() == 1 {
+            //     let route: Routes =
+            //         Routes::from_str(url.path().first().expect("We should get a root route"))
+            //             .ok()
+            //             .unwrap();
+            //     self.current_route_variant = Some(route)
+            // }
+        }
     }
 
     /// Match the url that change and update the router with the new current
     /// Route
     fn navigate_to_url(&mut self, mut url: Url) {
         let mut path = &mut url.to_string();
-        path.remove(0);
+        //         let other_path = &mut url.path();
+        // eprintln!(other)
+        //         // log!(other_path);
+        path.remove(0); // every url start with / so we need to remove it to match the path
 
         if let Some(route_match) = self.routes.get(path) {
-            log!("found route");
+            // log!("found route");
             self.navigate_to_new(route_match.clone());
         } else {
-            log!("404");
+            // log!("404");
 
             self.navigate_to_new(self.default_route.clone());
         }
@@ -424,6 +438,8 @@ mod test {
         assert_eq!(router.current_route.clone().unwrap(), router.routes[""]);
         assert_eq!(router.current_history_index, 0);
 
+        // assert_eq!(router.current_route_variant.unwrap(), ExampleRoutes::Home);
+
         router.navigate_to_new(router.routes["login"].clone());
 
         assert_eq!(
@@ -439,30 +455,30 @@ mod test {
         );
         assert_eq!(router.current_history_index, 2);
     }
-    // #[test]
-    // fn test_navigation_to_url() {
-    //     let mut router: Router<ExampleRoutes> = Router::new();
-    //
-    //     router.navigate_to_url(router.routes[""].clone().url.unwrap());
-    //
-    //     assert_eq!(router.current_route.clone().unwrap(), router.routes[""]);
-    //     assert_eq!(router.current_history_index, 0);
-    //
-    //     router.navigate_to_url(router.routes["login"].clone().url.unwrap());
-    //
-    //     assert_eq!(
-    //         router.current_route.clone().unwrap(),
-    //         router.routes["login"]
-    //     );
-    //     assert_eq!(router.current_history_index, 1);
-    //     router.navigate_to_url(router.routes["dashboard/other/other2"].clone().url.unwrap());
-    //
-    //     assert_eq!(
-    //         router.current_route.clone().unwrap(),
-    //         router.routes["dashboard/other/other2"].clone()
-    //     );
-    //     assert_eq!(router.current_history_index, 2);
-    // }
+    #[test]
+    fn test_navigation_to_url() {
+        let mut router: Router<ExampleRoutes> = Router::new();
+
+        router.navigate_to_url(router.routes[""].clone().url.unwrap());
+
+        assert_eq!(router.current_route.clone().unwrap(), router.routes[""]);
+        assert_eq!(router.current_history_index, 0);
+
+        router.navigate_to_url(router.routes["login"].clone().url.unwrap());
+
+        assert_eq!(
+            router.current_route.clone().unwrap(),
+            router.routes["login"]
+        );
+        assert_eq!(router.current_history_index, 1);
+        router.navigate_to_url(router.routes["dashboard/other/other2"].clone().url.unwrap());
+
+        assert_eq!(
+            router.current_route.clone().unwrap(),
+            router.routes["dashboard/other/other2"].clone()
+        );
+        assert_eq!(router.current_history_index, 2);
+    }
     #[test]
     fn test_backward() {
         let mut router: Router<ExampleRoutes> = Router::new();
