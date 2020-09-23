@@ -315,6 +315,11 @@ mod test {
     use std::collections::HashMap;
     use std::str::FromStr;
     use strum::{EnumProperty, IntoEnumIterator};
+    use wasm_bindgen_test::*;
+
+    use super::*;
+
+    wasm_bindgen_test_configure!(run_in_browser);
 
     #[derive(EnumIter, EnumString, EnumProperty, Display, Debug, Copy, Clone, PartialEq, Routes)]
     #[strum(serialize_all = "snake_case")]
@@ -359,7 +364,7 @@ mod test {
         #[strum(props(Default = "true"))]
         NotFound,
     }
-    #[test]
+    #[wasm_bindgen_test]
     fn test_iteration() {
         for route in ExampleRoutes::iter() {
             // println!("the route is {:?}", route);
@@ -367,7 +372,7 @@ mod test {
         }
         assert_eq!(ExampleRoutes::iter().len(), 6);
     }
-    #[test]
+    #[wasm_bindgen_test]
     fn test_root_routes_generation() {
         let hashed_mapped_routes = ExampleRoutes::get_hashed_routes();
         for map in &hashed_mapped_routes {
@@ -376,7 +381,7 @@ mod test {
         let len: u8 = hashed_mapped_routes.len() as u8;
         assert_eq!(len, 10);
     }
-    #[test]
+    #[wasm_bindgen_test]
     fn test_children_routes_generation() {
         let hashed_mapped_routes = DashboardRoutes::get_hashed_routes();
         for map in &hashed_mapped_routes {
@@ -385,7 +390,7 @@ mod test {
         let len: u8 = hashed_mapped_routes.len() as u8;
         assert_eq!(len, 4);
     }
-    #[test]
+    #[wasm_bindgen_test]
     fn test_great_children_routes_generation() {
         let hashed_mapped_routes = DashboardAdminRoutes::get_hashed_routes();
         for map in &hashed_mapped_routes {
@@ -395,7 +400,7 @@ mod test {
         assert_eq!(len, 2);
     }
 
-    #[test]
+    #[wasm_bindgen_test]
     fn test_build_router() {
         let router: Router<ExampleRoutes> = Router::new();
         let routes = router.routes;
@@ -410,7 +415,7 @@ mod test {
         assert_eq!(router.default_route, routes["not_found"])
     }
 
-    #[test]
+    #[wasm_bindgen_test]
     fn test_build_url() {
         let router: Router<ExampleRoutes> = Router::new();
         let url = router.base_url().clone().add_path_part("");
@@ -429,7 +434,7 @@ mod test {
 
         assert_eq!(url_from_new.path(), url.path());
     }
-    #[test]
+    #[wasm_bindgen_test]
     fn test_navigation_to_route() {
         let mut router: Router<ExampleRoutes> = Router::new();
 
@@ -455,7 +460,7 @@ mod test {
         );
         assert_eq!(router.current_history_index, 2);
     }
-    #[test]
+    #[wasm_bindgen_test]
     fn test_navigation_to_url() {
         let mut router: Router<ExampleRoutes> = Router::new();
 
@@ -479,7 +484,7 @@ mod test {
         );
         assert_eq!(router.current_history_index, 2);
     }
-    #[test]
+    #[wasm_bindgen_test]
     fn test_backward() {
         let mut router: Router<ExampleRoutes> = Router::new();
 
@@ -542,7 +547,7 @@ mod test {
         );
     }
 
-    #[test]
+    #[wasm_bindgen_test]
     fn test_forward() {
         let mut router: Router<ExampleRoutes> = Router::new();
 
