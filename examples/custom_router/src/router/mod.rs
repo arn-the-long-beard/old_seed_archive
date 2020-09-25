@@ -424,21 +424,24 @@ mod test {
         let router: Router<ExampleRoutes> = Router::new();
         let url = router.base_url().clone().add_path_part("");
         let root_route = &router.routes[""].clone();
-        let url_from_new = Urls::build_url(Urls::new(Url::new()), "");
+        let url_from_new = Urls::build_url(Urls::new(Url::new()), Vec::from([""]));
         assert_eq!(url_from_new.path(), url.path());
-        let url = router
-            .base_url()
-            .clone()
-            .add_path_part("dashboard/other/other2");
 
         let other2_route = &router.routes["dashboard/other/other2"].clone();
-        let url_from_new = Urls::build_url(Urls::new(Url::new()), "dashboard/other/other2");
+        let url_from_new = Urls::build_url(
+            Urls::new(Url::new()),
+            Vec::from(["dashboard", "other", "other2"]),
+        );
         // eprintln!("{:?}", url.path());
         // eprintln!("{:?}", url_from_router.path());
 
-        assert_eq!(url_from_new.path(), url.path());
+        assert_eq!(
+            url_from_new.path(),
+            other2_route.url.clone().unwrap().path()
+        );
     }
-    #[wasm_bindgen_test]
+    // #[wasm_bindgen_test]
+    #[test]
     fn test_navigation_to_route() {
         let mut router: Router<ExampleRoutes> = Router::new();
 
