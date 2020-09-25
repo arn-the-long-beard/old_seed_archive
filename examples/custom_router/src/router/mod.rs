@@ -20,8 +20,8 @@ use seed::{*, *};
 struct_urls!();
 /// Construct url injected in the web browser with path
 impl<'a> Urls<'a> {
-    pub fn build_url(self, path: &str) -> Url {
-        self.base_url().add_path_part(path)
+    pub fn build_url(self, segments: Vec<&str>) -> Url {
+        self.base_url().set_path(segments)
     }
 }
 // pub mod children;
@@ -68,7 +68,8 @@ impl<
         let mut hashed_ready_route: HashMap<String, Route> = HashMap::new();
         for map in routes {
             let mut route_with_url = map.1.clone();
-            route_with_url.url = Some(Urls::new(base_url.clone()).build_url(map.0.as_str()));
+            let split = map.0.as_str().split('/').collect();
+            route_with_url.url = Some(Urls::new(base_url.clone()).build_url(split));
             hashed_ready_route.insert(map.0, route_with_url.clone());
         }
         // let new_hash =routes.map(||)
@@ -213,15 +214,18 @@ impl<
         self.current_route = Some(route.clone());
         self.push_to_history(route.clone());
         if let Some(url) = route.url {
-            eprintln!("{:?}", url.path())
-            // let path = url.hash_path();
-            // if path.len() == 1 {
-            //     let route: Routes =
-            //         Routes::from_str(url.path().first().expect("We should get a root route"))
-            //             .ok()
-            //             .unwrap();
-            //     self.current_route_variant = Some(route)
-            // }
+            let path = url.path();
+            // log!(path);
+            println!("{:?}", path);
+            let test = &"/".to_string();
+            if path.len() == 1 && !path.first().unwrap().contains(test) {
+                println!(" does not contains / {:?}", path);
+                let route: Routes =
+                    Routes::from_str(url.path().first().expect("We should get a root route"))
+                        .ok()
+                        .unwrap();
+                self.current_route_variant = Some(route)
+            }
         }
     }
 
@@ -229,9 +233,9 @@ impl<
     /// Route
     fn navigate_to_url(&mut self, mut url: Url) {
         let mut path = &mut url.to_string();
-        //         let other_path = &mut url.path();
-        // eprintln!(other)
-        //         // log!(other_path);
+        let other_path = &mut url.path();
+
+        log!(other_path);
         path.remove(0); // every url start with / so we need to remove it to match the path
 
         if let Some(route_match) = self.routes.get(path) {
