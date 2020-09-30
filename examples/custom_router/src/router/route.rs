@@ -1,5 +1,8 @@
+use crate::router::children::ExtractRoutes;
 use seed::prelude::wasm_bindgen::__rt::std::collections::HashMap;
 use seed::Url;
+use std::fmt::Display;
+use strum::{EnumProperty, IntoEnumIterator};
 
 #[derive(Debug)]
 pub struct Route {
@@ -33,7 +36,23 @@ impl Route {
         }
         hash_map
     }
+
+    pub fn get_variant<
+        T: IntoEnumIterator
+            + std::str::FromStr
+            + EnumProperty
+            + Copy
+            + Clone
+            + PartialEq
+            + Display
+            + ExtractRoutes,
+    >(
+        &self,
+    ) -> Option<T> {
+        T::from_str(self.path.as_str()).ok()
+    }
 }
+
 /// todo I am afraid than cloning can be expansive if large app
 impl Clone for Route {
     fn clone(&self) -> Self {
