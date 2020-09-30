@@ -4,6 +4,7 @@ use std::fmt::Display;
 use strum::{EnumProperty, IntoEnumIterator};
 pub mod children;
 pub mod route;
+pub mod super_router;
 // impl Clone for ExampleRoutes {
 //     fn clone(&self) -> Self {
 //         *self
@@ -213,19 +214,14 @@ impl<
     pub fn navigate_to_new(&mut self, route: Route) {
         self.current_route = Some(route.clone());
         self.push_to_history(route.clone());
-        if let Some(url) = route.url {
+        if let Some(url) = &route.url {
             let path = url.path();
-            // log!(path);
-            println!("{:?}", path);
-            let test = &"/".to_string();
-            if path.len() == 1 && !path.first().unwrap().contains(test) {
-                println!(" does not contains / {:?}", path);
-                let route: Routes =
-                    Routes::from_str(url.path().first().expect("We should get a root route"))
-                        .ok()
-                        .unwrap();
-                self.current_route_variant = Some(route)
+            if path.len() == 1 {
+                self.current_route_variant = route.clone().get_variant::<Routes>();
+            } else {
             }
+        } else {
+            self.current_route_variant = Routes::from_str(self.default_route.path.as_str()).ok()
         }
     }
 
