@@ -7,18 +7,15 @@ extern crate strum;
 #[macro_use]
 extern crate strum_macros;
 use crate::pages::dashboard::DashboardRoutes;
-use seed::prelude::wasm_bindgen::__rt::std::collections::HashMap;
+use enum_paths::{AsPath, ParseError, ParsePath};
 
-use crate::router::children::ExtractRoutes;
-use crate::router::route::Route;
-use crate::router::{AvailableRoute, Router};
-use router_macro_derive::Routes;
-use std::str::FromStr;
 pub mod models;
 mod pages;
 pub mod router;
 mod theme;
 mod top_bar;
+
+use crate::router::super_router::{AvailableRoute, SuperRouter};
 use strum::{EnumProperty, IntoEnumIterator};
 
 // ------ ------
@@ -31,7 +28,8 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
         .subscribe(Msg::UrlRequested)
         .subscribe(Msg::UserLogged);
 
-    let mut router: Router<Routes> = Router::new();
+    let mut router: SuperRouter<Routes> = SuperRouter::new();
+    router.default_route = Some(Routes::NotFound); //replace with prop/attribute on enum
     router.init_url_and_navigation(url);
 
     Model {
@@ -42,19 +40,15 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     }
 }
 
-#[derive(EnumIter, EnumString, EnumProperty, Display, Debug, Copy, Clone, PartialEq, Routes)]
-#[strum(serialize_all = "snake_case")]
+#[derive(Debug, PartialEq, Copy, Clone, EnumIter, AsPath)]
 // need to make a derive (Routing) or something maybe
 pub enum Routes {
-    #[strum(serialize = "")]
-    Home,
     Login,
     Register,
-    Dashboard {
-        children: DashboardRoutes,
-    },
-    #[strum(props(Default = "true"))]
+    Dashboard(DashboardRoutes),
     NotFound,
+    #[name = ""]
+    Home,
     // Admin(page::admin::Model),
 }
 // ------ ------
@@ -63,7 +57,7 @@ pub enum Routes {
 
 struct Model {
     state: State,
-    router: Router<Routes>,
+    router: SuperRouter<Routes>,
     logged_user: Option<LoggedUser>,
     theme: Theme,
 }
@@ -157,7 +151,7 @@ fn view(model: &Model) -> impl IntoNodes<Msg> {
     if model.logged_user.is_none() {
         vec![
             header(&model),
-            if let Some(route) = &model.router.current_route_variant {
+            if let Some(route) = &model.router.current_route {
                 match route {
                     Routes::Home => home(&model.theme),
                     // Page::Admin(admin_model) => page::admin::view(admin_model, &model.ctx),
@@ -166,8 +160,8 @@ fn view(model: &Model) -> impl IntoNodes<Msg> {
                     Routes::Register => {
                         pages::register::view(&model.state.register).map_msg(Msg::Register)
                     }
-                    Routes::Dashboard { children } => {
-                        pages::dashboard::cross(*children, &model.state.dashboard)
+                    Routes::Dashboard(routes) => {
+                        pages::dashboard::cross(*routes, &model.state.dashboard)
                             .map_msg(Msg::Dashboard)
                     }
                     _ => div!["404"],
