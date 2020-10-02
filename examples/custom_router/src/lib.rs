@@ -7,7 +7,7 @@ extern crate strum;
 #[macro_use]
 extern crate strum_macros;
 use crate::pages::dashboard::DashboardRoutes;
-use enum_paths::{AsPath, ParseError, ParsePath};
+use enum_paths::{AsPath, Named, ParseError, ParsePath};
 
 pub mod models;
 mod pages;
@@ -40,14 +40,14 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     }
 }
 
-#[derive(Debug, PartialEq, Copy, Clone, EnumIter, AsPath)]
+#[derive(Debug, PartialEq, Copy, Clone, Named, EnumIter, AsPath)]
 // need to make a derive (Routing) or something maybe
 pub enum Routes {
     Login,
     Register,
     Dashboard(DashboardRoutes),
     NotFound,
-    #[name = ""]
+    #[segment_as = ""]
     Home,
     // Admin(page::admin::Model),
 }

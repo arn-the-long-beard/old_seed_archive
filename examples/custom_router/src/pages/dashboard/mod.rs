@@ -1,13 +1,13 @@
 use seed::{prelude::*, *};
 pub mod message;
 pub mod statistics;
-use enum_paths::{AsPath, ParseError, ParsePath};
+use enum_paths::{AsPath, Named, ParseError, ParsePath};
 
-#[derive(Debug, PartialEq, Copy, Clone, AsPath)]
+#[derive(Debug, PartialEq, Copy, Clone, AsPath, Named)]
 pub enum DashboardRoutes {
     Message,
     Statistics,
-    #[name = ""]
+    #[segment_as = ""]
     Root,
 }
 

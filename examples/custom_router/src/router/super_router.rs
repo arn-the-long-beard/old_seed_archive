@@ -11,7 +11,7 @@ use strum::IntoEnumIterator;
 //     Urls
 // ------ ------
 
-use enum_paths::{AsPath, ParsePath};
+use enum_paths::{AsPath, Named, ParsePath};
 use seed::{*, *};
 struct_urls!();
 /// Construct url injected in the web browser with path
@@ -29,7 +29,9 @@ pub enum SuperMove {
     IsReady,
 }
 
-pub struct SuperRouter<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> {
+pub struct SuperRouter<
+    Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone + Named,
+> {
     pub current_route: Option<Routes>,
     pub current_history_index: usize,
     pub default_route: Option<Routes>,
@@ -38,7 +40,7 @@ pub struct SuperRouter<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath 
     history: Vec<Routes>,
 }
 
-impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> Default
+impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone + Named> Default
     for SuperRouter<Routes>
 {
     fn default() -> Self {
@@ -53,7 +55,9 @@ impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> De
     }
 }
 
-impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> SuperRouter<Routes> {
+impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone + Named>
+    SuperRouter<Routes>
+{
     pub fn new() -> SuperRouter<Routes> {
         SuperRouter::default()
     }
@@ -233,7 +237,7 @@ impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> Su
                 url: self.url(&route),
                 path: route.as_path(),
                 is_active,
-                name: route.as_path(),
+                name: route.get_name(),
             })
         }
         list
@@ -250,19 +254,19 @@ mod test {
     use crate::router::{Router, Urls};
     extern crate enum_paths;
     extern crate router_macro_derive;
-
     use super::*;
     use enum_paths::{AsPath, ParseError, ParsePath};
+
     use seed::Url;
     use strum::IntoEnumIterator;
     use wasm_bindgen_test::*;
 
     wasm_bindgen_test_configure!(run_in_browser);
 
-    #[derive(Debug, PartialEq, Copy, Clone, AsPath)]
+    #[derive(Debug, PartialEq, Copy, Clone, AsPath, Named)]
     pub enum DashboardAdminRoutes {
         Other,
-        #[name = ""]
+        #[segment_as = ""]
         Root,
     }
     impl Default for DashboardAdminRoutes {
@@ -271,11 +275,11 @@ mod test {
         }
     }
 
-    #[derive(Debug, PartialEq, Copy, Clone, AsPath)]
+    #[derive(Debug, PartialEq, Copy, Clone, AsPath, Named)]
     pub enum DashboardRoutes {
         Admin(DashboardAdminRoutes),
         Profile(u32),
-        #[name = ""]
+        #[segment_as = ""]
         Root,
     }
     impl Default for DashboardRoutes {
@@ -283,14 +287,14 @@ mod test {
             DashboardRoutes::Root
         }
     }
-    #[derive(Debug, PartialEq, Copy, Clone, EnumIter, AsPath)]
+    #[derive(Debug, PartialEq, Copy, Clone, EnumIter, AsPath, Named)]
     enum ExampleRoutes {
         Login,
         Register,
         Stuff,
         Dashboard(DashboardRoutes),
         NotFound,
-        #[name = ""]
+        #[segment_as = ""]
         Home,
     }
 

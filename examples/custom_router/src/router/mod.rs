@@ -364,6 +364,16 @@ mod test {
         #[strum(props(Default = "true"))]
         NotFound,
     }
+
+    #[test]
+    fn test_names() {
+        let name = ExampleRoutes::Dashboard {
+            children: DashboardRoutes::Root,
+        }
+        .to_string();
+
+        assert_eq!(name, "dashboard");
+    }
     #[wasm_bindgen_test]
     fn test_iteration() {
         for route in ExampleRoutes::iter() {
