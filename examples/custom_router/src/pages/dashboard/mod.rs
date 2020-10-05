@@ -1,13 +1,18 @@
 use seed::{prelude::*, *};
 pub mod message;
 pub mod statistics;
+pub mod task_list;
+use crate::pages::dashboard::task_list::TasksRoutes;
+use crate::router::super_router::SuperRouter;
+use crate::Routes;
 use enum_paths::{AsPath, Named, ParseError, ParsePath};
 
 #[derive(Debug, PartialEq, Copy, Clone, AsPath, Named)]
 pub enum DashboardRoutes {
     Message,
+    Tasks(TasksRoutes),
     Statistics,
-    #[segment_as = ""]
+    #[as_path = ""]
     Root,
 }
 
@@ -25,12 +30,14 @@ pub struct Model {
 pub struct State {
     message: message::Model,
     statistics: statistics::Model,
+    tasks: task_list::Model,
 }
 
 pub enum Msg {
     ChangeName,
     Message(message::Msg),
     Statistic(statistics::Msg),
+    Tasks(task_list::Msg),
 }
 
 pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
@@ -46,18 +53,28 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             &mut model.state.statistics,
             &mut orders.proxy(Msg::Statistic),
         ),
+        Msg::Tasks(task) => {
+            task_list::update(task, &mut model.state.tasks, &mut orders.proxy(Msg::Tasks))
+        }
     }
 }
 pub fn view(model: &Model) -> Node<Msg> {
     div![&model.name]
 }
 
-pub fn cross(dashboard_routes: DashboardRoutes, model: &Model) -> Node<Msg> {
+pub fn cross(
+    dashboard_routes: DashboardRoutes,
+    model: &Model,
+    router: &SuperRouter<Routes>,
+) -> Node<Msg> {
     match dashboard_routes {
         DashboardRoutes::Root => view(model),
         DashboardRoutes::Message => message::view(&model.state.message).map_msg(Msg::Message),
         DashboardRoutes::Statistics => {
             statistics::view(&model.state.statistics).map_msg(Msg::Statistic)
+        }
+        DashboardRoutes::Tasks(task_routes) => {
+            task_list::view(task_routes, &model.state.tasks, router).map_msg(Msg::Tasks)
         }
     }
 }

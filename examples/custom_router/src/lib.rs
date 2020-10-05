@@ -6,6 +6,7 @@ use crate::{theme::Theme, top_bar::TopBar};
 extern crate strum;
 #[macro_use]
 extern crate strum_macros;
+use crate::pages::dashboard::task_list::TasksRoutes;
 use crate::pages::dashboard::DashboardRoutes;
 use enum_paths::{AsPath, Named, ParseError, ParsePath};
 
@@ -47,7 +48,7 @@ pub enum Routes {
     Register,
     Dashboard(DashboardRoutes),
     NotFound,
-    #[segment_as = ""]
+    #[as_path = ""]
     Home,
     // Admin(page::admin::Model),
 }
@@ -96,7 +97,7 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::UrlChanged(subs::UrlChanged(url)) => {
             log!("URL has changed");
             model.router.confirm_navigation(url);
-            // model.page = Route::init(url);
+            // model.state =  Route::init(url);
         }
         Msg::UrlRequested(request) => {
             log!("URL requested");
@@ -161,7 +162,7 @@ fn view(model: &Model) -> impl IntoNodes<Msg> {
                         pages::register::view(&model.state.register).map_msg(Msg::Register)
                     }
                     Routes::Dashboard(routes) => {
-                        pages::dashboard::cross(*routes, &model.state.dashboard)
+                        pages::dashboard::cross(*routes, &model.state.dashboard , &model.router)
                             .map_msg(Msg::Dashboard)
                     }
                     _ => div!["404"],
@@ -187,11 +188,12 @@ fn view(model: &Model) -> impl IntoNodes<Msg> {
 fn header(model: &Model) -> Node<Msg> {
     // let page = &model.page;
     // let base_url = &model.base_url;
-    let mut list: Vec<Node<Msg>> = Vec::new();
+    // let mut list: Vec<Node<Msg>> = Vec::new();
 
-    for route in &model.router.mapped_routes() {
-        list.push(render_route(route));
-    }
+    // for route in &model.router.mapped_routes() {
+    //     list.push(render_route(route));
+    // }
+    // list =
     div![
         TopBar::new("Welcome Guest")
             .style(model.theme.clone())
@@ -212,18 +214,89 @@ fn header(model: &Model) -> Node<Msg> {
                     ev(Ev::Click, |_| Msg::GoForward)
                 ]
             ]),
-        ul![list]
+        render_route(model)
     ]
 }
 //
 
-fn render_route(route: &AvailableRoute) -> Node<Msg> {
-    li![a![
-        C!["route", IF!( route.is_active => "active-route" )],
-        attrs! { At::Href => route.url },
-        &route.name,
-    ]]
+fn render_route(model: &Model) -> Node<Msg> {
+    ul![
+        li![a![
+            C![
+                "route",
+                IF!( model.router.is_current_route(&Routes::Login) => "active-route" )
+            ],
+            attrs! { At::Href => model.router.url(&Routes::Login) },
+            "Login",
+        ]],
+        li![a![
+            C![
+                "route",
+                IF!(model.router.is_current_route(&Routes::Register) => "active-route" )
+            ],
+            attrs! { At::Href => model.router.url(&Routes::Register) },
+            "Register",
+        ]],
+        li![a![
+            C![
+                "route",
+                IF!(model.router.is_current_route(&Routes::NotFound) => "active-route" )
+            ],
+            attrs! { At::Href => model.router.url(&Routes::NotFound) },
+            "NotFound",
+        ]],
+        li![a![
+            C![
+                "route",
+                IF!(model.router.is_current_route(&Routes::Home) => "active-route" )
+            ],
+            attrs! { At::Href => model.router.url(&Routes::Home) },
+            "Home",
+        ]],
+        li![a![C!["route"], "Dashboard",]],
+        ul![
+            li![a![
+                C![
+                    "route",
+                    IF!(model.router.is_current_route(&Routes::Dashboard(DashboardRoutes::Root)) => "active-route" )
+                ],
+                attrs! { At::Href => model.router.url(&Routes::Dashboard(DashboardRoutes::Root)) },
+                "Profile",
+            ]],
+            li![a![
+                C![
+                    "route",
+                    IF!(model.router.is_current_route(&Routes::Dashboard(DashboardRoutes::Message)) => "active-route" )
+                ],
+                attrs! { At::Href => model.router.url(&Routes::Dashboard(DashboardRoutes::Message)) },
+                "Messages",
+            ]],
+            li![a![
+                C![
+                    "route",
+                    IF!(model.router.is_current_route(&Routes::Dashboard(DashboardRoutes::Statistics)) => "active-route" )
+                ],
+                attrs! { At::Href => model.router.url(&Routes::Dashboard(DashboardRoutes::Statistics)) },
+                "Statistics",
+            ]],
+            li![a![
+                C![
+                    "route",
+                    IF!(model.router.is_current_route(&Routes::Dashboard(DashboardRoutes::Tasks(TasksRoutes::Root))) => "active-route" )
+                ],
+                attrs! { At::Href => model.router.url(&Routes::Dashboard(DashboardRoutes::Tasks(TasksRoutes::Root))) },
+                "Tasks",
+            ]],
+        ],
+    ]
 }
+// fn render_route(route: &AvailableRoute) -> Node<Msg> {
+//     li![a![
+//         C!["route", IF!( route.is_active => "active-route" )],
+//         attrs! { At::Href => route.url },
+//         &route.name,
+//     ]]
+// }
 // // /// Render a route
 // fn render_route(router : &Router<Routes>, route : Routes) -> Node<Msg> {
 //     li![a![

@@ -13,6 +13,7 @@ use strum::IntoEnumIterator;
 
 use enum_paths::{AsPath, Named, ParsePath};
 use seed::{*, *};
+
 struct_urls!();
 /// Construct url injected in the web browser with path
 impl<'a> Urls<'a> {
@@ -49,7 +50,7 @@ impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone + N
             default_route: None,
             history: Vec::new(),
             current_route: None,
-            base_url: Url::new(), // should replace with current ,aybe ?
+            base_url: Url::new(), // should replace with current ,maybe ?
             current_move: SuperMove::IsReady,
         }
     }
@@ -109,7 +110,7 @@ impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone + N
         if self.current_history_index == 0 {
             return None;
         }
-        let next_index = self.current_history_index - 1;
+        let next_index = &self.current_history_index - 1;
         let route = self.history.get(next_index).unwrap();
         Some(route.clone())
     }
@@ -131,7 +132,7 @@ impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone + N
         if self.current_history_index == self.history.len() - 1 {
             return None;
         }
-        let next_index = self.current_history_index + 1;
+        let next_index = &self.current_history_index + 1;
 
         let route = self.history.get(next_index).unwrap_or_else(|| {
             panic!(
@@ -209,6 +210,14 @@ impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone + N
         let url = Urls::new(self.base_url.clone()).build_url(segments);
         url
     }
+
+    pub fn url_static(route: &Routes) -> Url {
+        let full_path = route.as_path();
+        let segments: Vec<&str> = full_path.as_str().split('/').collect();
+        let url = Urls::new(Url::new()).build_url(segments);
+        url
+    }
+
     /// This method accept a given url and choose the appropriate update for the
     /// history
     /// It also reset the current move
@@ -266,7 +275,7 @@ mod test {
     #[derive(Debug, PartialEq, Copy, Clone, AsPath, Named)]
     pub enum DashboardAdminRoutes {
         Other,
-        #[segment_as = ""]
+        #[as_path = ""]
         Root,
     }
     impl Default for DashboardAdminRoutes {
@@ -279,7 +288,7 @@ mod test {
     pub enum DashboardRoutes {
         Admin(DashboardAdminRoutes),
         Profile(u32),
-        #[segment_as = ""]
+        #[as_path = ""]
         Root,
     }
     impl Default for DashboardRoutes {
@@ -294,7 +303,7 @@ mod test {
         Stuff,
         Dashboard(DashboardRoutes),
         NotFound,
-        #[segment_as = ""]
+        #[as_path = ""]
         Home,
     }
 
