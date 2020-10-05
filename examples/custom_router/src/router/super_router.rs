@@ -11,7 +11,7 @@ use strum::IntoEnumIterator;
 //     Urls
 // ------ ------
 
-use enum_paths::{AsPath, Named, ParsePath};
+use enum_paths::{AsPath, ParsePath};
 use seed::{*, *};
 
 struct_urls!();
@@ -30,9 +30,7 @@ pub enum SuperMove {
     IsReady,
 }
 
-pub struct SuperRouter<
-    Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone + Named,
-> {
+pub struct SuperRouter<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> {
     pub current_route: Option<Routes>,
     pub current_history_index: usize,
     pub default_route: Option<Routes>,
@@ -41,7 +39,7 @@ pub struct SuperRouter<
     history: Vec<Routes>,
 }
 
-impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone + Named> Default
+impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> Default
     for SuperRouter<Routes>
 {
     fn default() -> Self {
@@ -56,9 +54,7 @@ impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone + N
     }
 }
 
-impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone + Named>
-    SuperRouter<Routes>
-{
+impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> SuperRouter<Routes> {
     pub fn new() -> SuperRouter<Routes> {
         SuperRouter::default()
     }
@@ -246,7 +242,7 @@ impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone + N
                 url: self.url(&route),
                 path: route.as_path(),
                 is_active,
-                name: route.get_name(),
+                name: "".to_string(),
             })
         }
         list
@@ -272,7 +268,7 @@ mod test {
 
     wasm_bindgen_test_configure!(run_in_browser);
 
-    #[derive(Debug, PartialEq, Copy, Clone, AsPath, Named)]
+    #[derive(Debug, PartialEq, Copy, Clone, AsPath)]
     pub enum DashboardAdminRoutes {
         Other,
         #[as_path = ""]
@@ -284,7 +280,7 @@ mod test {
         }
     }
 
-    #[derive(Debug, PartialEq, Copy, Clone, AsPath, Named)]
+    #[derive(Debug, PartialEq, Copy, Clone, AsPath)]
     pub enum DashboardRoutes {
         Admin(DashboardAdminRoutes),
         Profile(u32),
@@ -296,7 +292,7 @@ mod test {
             DashboardRoutes::Root
         }
     }
-    #[derive(Debug, PartialEq, Copy, Clone, EnumIter, AsPath, Named)]
+    #[derive(Debug, PartialEq, Copy, Clone, EnumIter, AsPath)]
     enum ExampleRoutes {
         Login,
         Register,
