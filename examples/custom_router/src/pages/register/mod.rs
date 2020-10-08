@@ -2,6 +2,8 @@ use crate::models::user::User;
 use crate::request::RequestState;
 use seed::{prelude::*, *};
 
+pub fn init() {}
+
 #[derive(Default)]
 pub struct Model {
     user: User,
