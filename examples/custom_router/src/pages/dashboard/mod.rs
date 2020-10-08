@@ -5,9 +5,9 @@ pub mod task_list;
 use crate::pages::dashboard::task_list::TasksRoutes;
 use crate::router::super_router::SuperRouter;
 use crate::Routes;
-use enum_paths::{AsPath, Named, ParseError, ParsePath};
+use enum_paths::{AsPath, ParseError, ParsePath};
 
-#[derive(Debug, PartialEq, Copy, Clone, AsPath, Named)]
+#[derive(Debug, PartialEq, Copy, Clone, AsPath)]
 pub enum DashboardRoutes {
     Message,
     Tasks(TasksRoutes),
