@@ -1,7 +1,7 @@
 use crate::pages::dashboard::DashboardRoutes;
 use crate::router::super_router::{AvailableRoute, SuperRouter};
 use crate::Routes;
-use enum_paths::{AsPath, Named, ParseError, ParsePath};
+use enum_paths::{AsPath, ParseError, ParsePath};
 use seed::{prelude::*, *};
 
 pub mod task;
@@ -19,7 +19,7 @@ impl Default for Model {
         }
     }
 }
-#[derive(Debug, EnumIter, PartialEq, Copy, Clone, AsPath, Named)]
+#[derive(Debug, EnumIter, PartialEq, Copy, Clone, AsPath)]
 pub enum TasksRoutes {
     Task(u32),
     #[as_path = ""]
@@ -52,9 +52,6 @@ fn render_tasks(model: &Model, router: &SuperRouter<Routes>) -> Node<Msg> {
 
 pub fn list(tasks: &[task::Model], router: &SuperRouter<Routes>) -> Vec<Node<Msg>> {
     let mut tasks_list = Vec::new();
-
-    log!(tasks_list);
-
     for t in tasks {
         tasks_list.push(render_task(t, router));
     }
