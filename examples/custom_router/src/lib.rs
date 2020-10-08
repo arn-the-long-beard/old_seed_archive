@@ -6,17 +6,18 @@ use crate::{theme::Theme, top_bar::TopBar};
 extern crate strum;
 #[macro_use]
 extern crate strum_macros;
+extern crate router_macro_derive;
 use crate::pages::dashboard::task_list::TasksRoutes;
 use crate::pages::dashboard::DashboardRoutes;
-use enum_paths::{AsPath, Named, ParseError, ParsePath};
-
+use enum_paths::{AsPath, ParseError, ParsePath};
+use router_macro_derive::DefaultRoute;
 pub mod models;
 mod pages;
 pub mod router;
 mod theme;
 mod top_bar;
+use crate::router::super_router::SuperRouter;
 
-use crate::router::super_router::{AvailableRoute, SuperRouter};
 use strum::{EnumProperty, IntoEnumIterator};
 
 // ------ ------
@@ -41,17 +42,19 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     }
 }
 
-#[derive(Debug, PartialEq, Copy, Clone, Named, EnumIter, AsPath)]
+#[derive(Debug, PartialEq, Copy, Clone, EnumIter, AsPath, DefaultRoute)]
 // need to make a derive (Routing) or something maybe
 pub enum Routes {
     Login,
     Register,
     Dashboard(DashboardRoutes),
+    #[default_route]
     NotFound,
     #[as_path = ""]
     Home,
     // Admin(page::admin::Model),
 }
+
 // ------ ------
 //     Model
 // ------ ------
@@ -162,7 +165,7 @@ fn view(model: &Model) -> impl IntoNodes<Msg> {
                         pages::register::view(&model.state.register).map_msg(Msg::Register)
                     }
                     Routes::Dashboard(routes) => {
-                        pages::dashboard::cross(*routes, &model.state.dashboard , &model.router)
+                        pages::dashboard::cross(*routes, &model.state.dashboard, &model.router)
                             .map_msg(Msg::Dashboard)
                     }
                     _ => div!["404"],
