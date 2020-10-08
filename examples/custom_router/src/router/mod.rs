@@ -4,7 +4,9 @@ use std::fmt::Display;
 use strum::{EnumProperty, IntoEnumIterator};
 pub mod children;
 pub mod route;
+mod super_route;
 pub mod super_router;
+pub mod url;
 // impl Clone for ExampleRoutes {
 //     fn clone(&self) -> Self {
 //         *self
