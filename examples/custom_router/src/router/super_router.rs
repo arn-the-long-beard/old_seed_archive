@@ -1,5 +1,5 @@
 use seed::Url;
-use std::fmt::{Debug, Display};
+use std::fmt::Debug;
 use strum::IntoEnumIterator;
 
 // impl Clone for ExampleRoutes {
@@ -306,7 +306,7 @@ mod test {
     #[wasm_bindgen_test]
     fn test_iteration() {
         for route in ExampleRoutes::iter() {
-            // println!("the route is {:?}", route);
+
             // println!("stuff {:?}", answer());
         }
         assert_eq!(ExampleRoutes::iter().len(), 6);
