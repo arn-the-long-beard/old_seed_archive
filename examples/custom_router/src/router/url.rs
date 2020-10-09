@@ -1,5 +1,6 @@
 use crate::router::super_router::Urls;
 use enum_paths::ParsePath;
+use seed::prelude::IndexMap;
 use seed::Url;
 use std::fmt::Debug;
 use strum::IntoEnumIterator;
@@ -120,4 +121,30 @@ mod test {
             ExampleRoutes::Dashboard(DashboardRoutes::Profile(1))
         );
     }
+
+    #[test]
+    fn test_convert_to_string() {
+        let mut hash: IndexMap<String, String> = IndexMap::new();
+
+        hash.insert("user".to_string(), "arn".to_string());
+        hash.insert("role".to_string(), "baby_programmer".to_string());
+        hash.insert("location".to_string(), "norway".to_string());
+
+        assert_eq!(
+            "user=arn&role=baby_programmer&location=norway",
+            convert_to_string(hash)
+        );
+    }
+}
+
+pub fn convert_to_string(query: IndexMap<String, String>) -> String {
+    let mut query_string = "".to_string();
+    for (i, q) in query.iter().enumerate() {
+        query_string += format!("{}={}", q.0, q.1).as_str();
+
+        if i != query.len() - 1 {
+            query_string += format!("&").as_str();
+        }
+    }
+    query_string
 }
