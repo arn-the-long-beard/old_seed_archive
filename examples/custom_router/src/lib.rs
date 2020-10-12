@@ -10,14 +10,14 @@ extern crate router_macro_derive;
 use crate::pages::dashboard::task_list::TasksRoutes;
 use crate::pages::dashboard::DashboardRoutes;
 use enum_paths::{AsPath, ParseError, ParsePath};
-use router_macro_derive::DefaultRoute;
+use router_macro_derive::Routing;
 pub mod models;
 mod pages;
 pub mod router;
 mod theme;
 mod top_bar;
 use crate::router::super_router::SuperRouter;
-
+use crate::router::url::{convert_to_string, Navigation};
 use strum::{EnumProperty, IntoEnumIterator};
 
 // ------ ------
@@ -42,17 +42,19 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     }
 }
 
-#[derive(Debug, PartialEq, Copy, Clone, EnumIter, AsPath, DefaultRoute)]
+#[derive(Debug, PartialEq, Clone, Copy, EnumIter, AsPath)]
 // need to make a derive (Routing) or something maybe
 pub enum Routes {
     Login,
     Register,
     Dashboard(DashboardRoutes),
-    #[default_route]
+    // #[default_route]
+    // Admin {
+    //     query: IndexMap<String, String>,
+    // },
     NotFound,
     #[as_path = ""]
     Home,
-    // Admin(page::admin::Model),
 }
 
 // ------ ------
