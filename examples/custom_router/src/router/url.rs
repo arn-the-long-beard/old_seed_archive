@@ -8,6 +8,68 @@ pub trait Navigation {
     fn to_url(&self) -> Url;
 }
 
+#[cfg(test)]
+mod test {
+    use crate::router::{Router, Urls};
+
+    extern crate enum_paths;
+    extern crate router_macro_derive;
+
+    use super::*;
+    use enum_paths::{AsPath, ParseError, ParsePath};
+
+    #[derive(Debug)]
+    struct UserTask {
+        id: String,
+        query: IndexMap<String, String>,
+    }
+    #[test]
+    fn test_string_to_index_map() {
+        let string = "/task?user=arn&role=programmer";
+
+        let query = extract_url_payload(string.to_string());
+
+        let mut query_to_compare: IndexMap<String, String> = IndexMap::new();
+
+        query_to_compare.insert("user".to_string(), "arn".to_string());
+        query_to_compare.insert("role".to_string(), "programmer".to_string());
+
+        assert_eq!(query.1.unwrap(), query_to_compare);
+    }
+
+    #[test]
+    fn test_strings() {
+        let string = "/task/12?user=arn&role=programmer";
+
+        let task: UserTask = string
+            .trim_start_matches('/')
+            .strip_prefix("task")
+            .map(|rest| extract_url_payload(rest.to_string()))
+            .map(|(id, query)| (id.unwrap(), query.unwrap()))
+            .map(|(id, query)| UserTask { id, query })
+            .unwrap();
+
+        eprintln!("{:?}", task);
+        let mut query_to_compare: IndexMap<String, String> = IndexMap::new();
+        query_to_compare.insert("user".to_string(), "arn".to_string());
+        query_to_compare.insert("role".to_string(), "programmer".to_string());
+
+        assert_eq!(task.id, "12");
+        assert_eq!(task.query, query_to_compare);
+
+        let string = "?user=arn&role=programmer";
+
+        let query = extract_url_payload(string.to_string());
+
+        let mut query_to_compare: IndexMap<String, String> = IndexMap::new();
+
+        query_to_compare.insert("user".to_string(), "arn".to_string());
+        query_to_compare.insert("role".to_string(), "programmer".to_string());
+
+        assert_eq!(query.1.unwrap(), query_to_compare);
+    }
+}
+
 pub fn convert_to_string(query: IndexMap<String, String>) -> String {
     let mut query_string = "".to_string();
     for (i, q) in query.iter().enumerate() {

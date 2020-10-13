@@ -14,11 +14,6 @@ mod test {
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
 
-    #[derive(Debug)]
-    struct UserTask {
-        id: String,
-        query: IndexMap<String, String>,
-    }
     #[derive(Debug, PartialEq, Clone, Routing)]
     pub enum ExampleRoutes {
         Other,
@@ -138,51 +133,5 @@ mod test {
         let route = ExampleRoutes::Dashboard(DashboardRoutes::Stuff {
             id: "123".to_string(),
         });
-    }
-
-    #[test]
-    fn test_string_to_index_map() {
-        let string = "/task?user=arn&role=programmer";
-
-        let query = extract_url_payload(string.to_string());
-
-        let mut query_to_compare: IndexMap<String, String> = IndexMap::new();
-
-        query_to_compare.insert("user".to_string(), "arn".to_string());
-        query_to_compare.insert("role".to_string(), "programmer".to_string());
-
-        assert_eq!(query.1.unwrap(), query_to_compare);
-    }
-
-    #[test]
-    fn test_strings() {
-        let string = "/task/12?user=arn&role=programmer";
-
-        let task: UserTask = string
-            .trim_start_matches('/')
-            .strip_prefix("task")
-            .map(|rest| extract_url_payload(rest.to_string()))
-            .map(|(id, query)| (id.unwrap(), query.unwrap()))
-            .map(|(id, query)| UserTask { id, query })
-            .unwrap();
-
-        eprintln!("{:?}", task);
-        let mut query_to_compare: IndexMap<String, String> = IndexMap::new();
-        query_to_compare.insert("user".to_string(), "arn".to_string());
-        query_to_compare.insert("role".to_string(), "programmer".to_string());
-
-        assert_eq!(task.id, "12");
-        assert_eq!(task.query, query_to_compare);
-
-        let string = "?user=arn&role=programmer";
-
-        let query = extract_url_payload(string.to_string());
-
-        let mut query_to_compare: IndexMap<String, String> = IndexMap::new();
-
-        query_to_compare.insert("user".to_string(), "arn".to_string());
-        query_to_compare.insert("role".to_string(), "programmer".to_string());
-
-        assert_eq!(query.1.unwrap(), query_to_compare);
     }
 }
