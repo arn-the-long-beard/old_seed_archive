@@ -331,7 +331,7 @@ fn as_tuple_variant(ident: Ident, name: Option<String>, fields: Iter<'_, Field>)
         ))
     }
     let format = match name {
-        Some(name) => quote! { format!("/{}{}", #name, nested.as_path()) },
+        Some(name) => quote! { format!("/{}{}", #name, nested.clone().as_path()) },
         None => quote! { nested.as_path() },
     };
     quote! {
