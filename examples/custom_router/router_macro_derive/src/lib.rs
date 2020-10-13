@@ -163,6 +163,13 @@ pub fn derive_as_path(item: TokenStream) -> TokenStream {
                     }.parse().unwrap();
                     url
         }
+
+        fn from_url(url: Url) -> std::result::Result<Self, ParseError>
+         where
+        Self: Sized + ParsePath {
+        let string_url = url.to_string();
+          Self::parse_path(&string_url)
+        }
     }
             impl AsPath for #ident {
             fn as_path(self) -> String {

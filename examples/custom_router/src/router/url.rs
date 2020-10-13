@@ -1,20 +1,18 @@
 use crate::router::super_router::Urls;
-use enum_paths::ParsePath;
-use seed::prelude::IndexMap;
-use seed::Url;
-use std::fmt::Debug;
-use std::slice::Iter;
+use enum_paths::{ParseError, ParsePath};
+use seed::{prelude::IndexMap, Url};
+use std::{fmt::Debug, slice::Iter};
 use strum::IntoEnumIterator;
 
 pub trait Navigation {
-    // fn from_url(url: Url) -> Option<Self>
-    // where
-    //     Self: Sized;
-    fn to_url(&self) -> Url;
+    fn from_url(url: Url,) -> std::result::Result<Self, ParseError,>
+    where
+        Self: Sized;
+    fn to_url(&self,) -> Url;
 }
 
-// impl<T: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> Routing for T {
-//     fn from_url(url: Url) -> Option<Self>
+// impl<T: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone>
+// Routing for T {     fn from_url(url: Url) -> Option<Self>
 //     where
 //         Self: Sized,
 //     {
@@ -38,10 +36,6 @@ mod test {
 
     use super::*;
     use enum_paths::{AsPath, ParseError, ParsePath};
-
-    use crate::router::super_router::SuperRouter;
-    use seed::Url;
-    use strum::IntoEnumIterator;
     use wasm_bindgen_test::*;
 
     wasm_bindgen_test_configure!(run_in_browser);
@@ -60,8 +54,8 @@ mod test {
 
     #[derive(Debug, PartialEq, Copy, Clone, AsPath)]
     pub enum DashboardRoutes {
-        Admin(DashboardAdminRoutes),
-        Profile(u32),
+        Admin(DashboardAdminRoutes,),
+        Profile(u32,),
         #[as_path = ""]
         Root,
     }
@@ -175,7 +169,7 @@ pub fn extract_url_payload(
         }
     }
     let result = if query.iter().len() > 0 {
-        Some(query)
+        Some(query,)
     } else {
         None
     };
