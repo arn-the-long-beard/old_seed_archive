@@ -379,7 +379,7 @@ fn build_string(
     match structs_tuple {
         (id, query, children) if id.is_some() && query.is_some() && children.is_some() => {
             let query_string = build_query();
-            quote! { format!("/{}/{}{}?{}", #name, id, children.as_path() , #query_string)}
+            quote! { format!("/{}/{}{}?{}", #name, id, children.clone().as_path() , #query_string)}
         }
 
         (id, query, children) if id.is_some() && query.is_some() && children.is_none() => {
@@ -390,10 +390,10 @@ fn build_string(
         (id, query, children) if id.is_none() && query.is_some() && children.is_some() => {
             let query_string = build_query();
 
-            quote! { format!("/{}/{}={}", #name,  children.as_path(),#query_string)}
+            quote! { format!("/{}/{}={}", #name,  children.clone().as_path(),#query_string)}
         }
         (id, query, children) if id.is_some() && query.is_none() && children.is_some() => {
-            quote! { format!("/{}/{}{}", #name, id,  children.as_path())}
+            quote! { format!("/{}/{}{}", #name, id,  children.clone().as_path())}
         }
         (id, query, children) if id.is_some() && query.is_none() && children.is_none() => {
             quote! { format!("/{}/{}", #name, id)}
@@ -403,7 +403,7 @@ fn build_string(
             quote! { format!("/{}?{}", #name,#query_string)}
         }
         (id, query, children) if id.is_none() && query.is_none() && children.is_some() => {
-            quote! { format!("/{}/{}", #name,   children.as_path())}
+            quote! { format!("/{}/{}", #name,   children.clone().as_path())}
         }
 
         (_, _, _) => {
@@ -451,7 +451,9 @@ fn parse_struct_variant(
         .find(|f| f.ident.as_ref().unwrap() == "query");
 
     // update when having children available.
-    let children = None;
+    let children = fields
+        .clone()
+        .find(|f| f.ident.as_ref().unwrap() == "children");
 
     let structs_tuple = (id_param, query_parameters, children);
     let structs = build_advanced(structs_tuple);
@@ -470,7 +472,7 @@ fn parse_struct_variant(
     };
 
     quote! {
-        #parser.map(|(id, query)| Self::#ident{#structs})
+        #parser.map(|(id, query, children)| Self::#ident{#structs})
     }
 }
 
@@ -520,17 +522,20 @@ fn build_structs(structs_tuple: (Option<&Field>, Option<&Field>, Option<&Field>)
 fn build_advanced(structs_tuple: (Option<&Field>, Option<&Field>, Option<&Field>)) -> TokenStream2 {
     match structs_tuple {
         (id, query, children) if id.is_some() && query.is_some() && children.is_some() => {
-            quote! { id : id.unwrap(),query : query.unwrap(),children : children.unwrap()}
+            let sub_enum = &children.clone().unwrap().ty;
+            quote! { id : id.unwrap(),query : query.unwrap(),children :  #sub_enum::parse_path(&children.unwrap()).unwrap()}
         }
 
         (id, query, _) if id.is_some() && query.is_some() => {
             quote! { id : id.unwrap(),query : query.unwrap()}
         }
         (id, query, children) if id.is_none() && query.is_some() && children.is_some() => {
-            quote! { query : query.unwrap(),children : children.unwrap()}
+            let sub_enum = &children.clone().unwrap().ty;
+            quote! { query : query.unwrap(),children :  #sub_enum::parse_path(&children.unwrap()).unwrap()}
         }
         (id, query, children) if id.is_some() && children.is_some() && query.is_none() => {
-            quote! { id : id.unwrap(),children : children.unwrap()}
+            let sub_enum = &children.clone().unwrap().ty;
+            quote! { id : id.unwrap(),children : #sub_enum:::parse_path(&children.unwrap()).unwrap()}
         }
         (id, query, children) if id.is_some() && query.is_none() && children.is_none() => {
             quote! { id : id.unwrap()}
@@ -539,7 +544,8 @@ fn build_advanced(structs_tuple: (Option<&Field>, Option<&Field>, Option<&Field>
             quote! { query : query.unwrap()}
         }
         (id, query, children) if query.is_none() && id.is_none() & children.is_some() => {
-            quote! { children : children.unwrap()}
+            let sub_enum = &children.clone().unwrap().ty;
+            quote! { children :#sub_enum::parse_path(&children.unwrap().clone()).unwrap()}
         }
 
         (_, _, _) => {

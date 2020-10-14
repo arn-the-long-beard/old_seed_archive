@@ -22,6 +22,12 @@ mod test {
     struct UserTask {
         id: String,
         query: IndexMap<String, String>,
+        children: String,
+    }
+    #[derive(Debug)]
+    struct UserTask2 {
+        id: String,
+        query: IndexMap<String, String>,
     }
     #[test]
     fn test_string_to_index_map() {
@@ -41,12 +47,12 @@ mod test {
     fn test_strings() {
         let string = "/task/12?user=arn&role=programmer";
 
-        let task: UserTask = string
+        let task: UserTask2 = string
             .trim_start_matches('/')
             .strip_prefix("task")
             .map(|rest| extract_url_payload(rest.to_string()))
-            .map(|(id, query)| (id.unwrap(), query.unwrap()))
-            .map(|(id, query)| UserTask { id, query })
+            .map(|(id, query, _)| (id.unwrap(), query.unwrap()))
+            .map(|(id, query)| UserTask2 { id, query })
             .unwrap();
 
         eprintln!("{:?}", task);
@@ -68,6 +74,30 @@ mod test {
 
         assert_eq!(query.1.unwrap(), query_to_compare);
     }
+    #[test]
+    fn test_strings_with_children() {
+        let string = "/task/12/stuff?user=arn&role=programmer";
+
+        let task: UserTask = string
+            .trim_start_matches('/')
+            .strip_prefix("task")
+            .map(|rest| extract_url_payload(rest.to_string()))
+            .map(|(id, query, children)| (id.unwrap(), query.unwrap(), children.unwrap()))
+            .map(|(id, query, children)| UserTask {
+                id,
+                query,
+                children,
+            })
+            .unwrap();
+
+        eprintln!("{:?}", task);
+        let mut query_to_compare: IndexMap<String, String> = IndexMap::new();
+        query_to_compare.insert("user".to_string(), "arn".to_string());
+        query_to_compare.insert("role".to_string(), "programmer".to_string());
+
+        assert_eq!(task.id, "12");
+        assert_eq!(task.query, query_to_compare);
+    }
 }
 
 pub fn convert_to_string(query: IndexMap<String, String>) -> String {
@@ -84,7 +114,11 @@ pub fn convert_to_string(query: IndexMap<String, String>) -> String {
 
 pub fn extract_url_payload(
     query_string: String,
-) -> (Option<String>, Option<IndexMap<String, String>>) {
+) -> (
+    Option<String>,
+    Option<IndexMap<String, String>>,
+    Option<String>,
+) {
     let mut query: IndexMap<String, String> = IndexMap::new();
 
     let params: Vec<&str> = query_string.split('?').collect();
@@ -93,9 +127,14 @@ pub fn extract_url_payload(
     let mut root_paths = params_iter.next().unwrap().split('/');
 
     let root = root_paths.next();
+
+    if root.is_some() && !root.unwrap().is_empty() {
+        eprintln!("root path should be like ''");
+    }
     // make error if root is not empty
 
     let path = root_paths.next().map(|r| r.to_string());
+    let children_path = root_paths.next().map(|r| r.to_string());
 
     if let Some(sub_string) = params_iter.next() {
         let key_value: Vec<&str> = sub_string.split('&').collect();
@@ -113,5 +152,5 @@ pub fn extract_url_payload(
         None
     };
 
-    (path, result)
+    (path, result, children_path)
 }
