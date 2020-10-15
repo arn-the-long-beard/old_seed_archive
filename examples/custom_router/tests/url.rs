@@ -43,7 +43,11 @@ mod test {
     #[derive(Debug, PartialEq, Clone, Routing)]
     pub enum Settings {
         Api(Apis),
-        Projects { query: IndexMap<String, String> },
+        Projects {
+            id: String,
+            query: IndexMap<String, String>,
+            children: Apis,
+        },
     }
 
     #[derive(Debug, PartialEq, Clone, Routing)]
@@ -80,14 +84,17 @@ mod test {
         let url: Url = ExampleRoutes::Other {
             id: "2".to_string(),
             children: Settings::Projects {
+                id: "14".to_string(),
                 query: query_search.clone(),
+                children: Apis::Facebook,
             },
         }
         .to_url();
 
-        let url_to_compare: Url = "/other/2/projects?user=arn&role=baby_programmer&location=norway"
-            .parse()
-            .unwrap();
+        let url_to_compare: Url =
+            "/other/2/projects/14/facebook?user=arn&role=baby_programmer&location=norway"
+                .parse()
+                .unwrap();
         assert_eq!(url, url_to_compare);
 
         let url: Url = ExampleRoutes::Other {
@@ -132,13 +139,16 @@ mod test {
         query.insert("role".to_string(), "baby_programmer".to_string());
         query.insert("location".to_string(), "norway".to_string());
 
-        let string_to_compare = "/other/2/projects?user=arn&role=baby_programmer&location=norway";
+        let string_to_compare =
+            "/other/2/projects/14/facebook?user=arn&role=baby_programmer&location=norway";
         assert_eq!(
             ExampleRoutes::parse_path(string_to_compare).unwrap(),
             ExampleRoutes::Other {
                 id: "2".to_string(),
                 children: Settings::Projects {
+                    id: "14".to_string(),
                     query: query.clone(),
+                    children: Apis::Facebook
                 },
             }
         );
@@ -152,10 +162,15 @@ mod test {
         query_search.insert("location".to_string(), "norway".to_string());
         let url = ExampleRoutes::Dashboard(DashboardRoutes::Root).to_url();
         let url_to_compare: Url = "/dashboard/".parse().unwrap();
-        // let url = ExampleRoutes::Admin { query: query_search }.to_url();
-        // let url_to_compare: Url =
-        // "/admin?user=arn&role=baby_programmer&location=norway"     .parse()
-        //     .unwrap();
+
+        assert_eq!(url, url_to_compare);
+        let url = ExampleRoutes::Admin {
+            query: query_search,
+        }
+        .to_url();
+        let url_to_compare: Url = "/admin?user=arn&role=baby_programmer&location=norway"
+            .parse()
+            .unwrap();
         assert_eq!(url, url_to_compare);
     }
     #[wasm_bindgen_test]
@@ -196,15 +211,18 @@ mod test {
         query.insert("role".to_string(), "baby_programmer".to_string());
         query.insert("location".to_string(), "norway".to_string());
 
-        let url_to_compare: Url = "/other/2/projects?user=arn&role=baby_programmer&location=norway"
-            .parse()
-            .unwrap();
+        let url_to_compare: Url =
+            "/other/2/projects/14/facebook?user=arn&role=baby_programmer&location=norway"
+                .parse()
+                .unwrap();
         assert_eq!(
             ExampleRoutes::from_url(url_to_compare).unwrap(),
             ExampleRoutes::Other {
                 id: "2".to_string(),
                 children: Settings::Projects {
+                    id: "14".to_string(),
                     query: query.clone(),
+                    children: Apis::Facebook
                 },
             }
         );
