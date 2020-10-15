@@ -327,7 +327,7 @@ mod test {
         let mut router = SuperRouter::<ExampleRoutes>::new();
         let url = Url::new().add_path_part("example");
         router.navigate_to_url(url);
-        assert_eq!(router.current_route.unwrap(), router.default_route.unwrap());
+        assert_eq!(router.current_route.unwrap(), router.default_route);
     }
     // #[test]
     // fn test_children_routes_generation() {
