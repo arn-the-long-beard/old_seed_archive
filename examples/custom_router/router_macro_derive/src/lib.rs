@@ -478,9 +478,6 @@ fn parse_struct_variant(
     let with_query_params = structs_tuple.1.is_some();
     let with_children = structs_tuple.2.is_some();
     let structs = build_advanced(structs_tuple);
-    println!(" macro for  {}", name.clone().unwrap());
-    println!(" tuple  {:?}", structs_tuple);
-    println!(" id_param  {:?}", id_param);
     let parser = match name {
         Some(name) => {
             quote! {      next.strip_prefix(#name).ok_or(err)
