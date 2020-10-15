@@ -10,6 +10,8 @@ mod test {
     use enum_paths::{AsPath, ParseError, ParsePath};
     use router_macro_derive::Routing;
     use seed::prelude::{IndexMap, *};
+    use seed::util::log;
+    use seed::{*, *};
     use std::str::FromStr;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
@@ -17,6 +19,7 @@ mod test {
     #[derive(Debug, PartialEq, Clone, Routing)]
     pub enum ExampleRoutes {
         Other {
+            id: String,
             children: Settings,
         },
         Admin {
@@ -39,9 +42,17 @@ mod test {
     }
     #[derive(Debug, PartialEq, Clone, Routing)]
     pub enum Settings {
-        Repos,
+        Api(Apis),
         Projects { query: IndexMap<String, String> },
     }
+
+    #[derive(Debug, PartialEq, Clone, Routing)]
+    pub enum Apis {
+        Facebook,
+        Google,
+        Microsoft,
+    }
+
     #[wasm_bindgen_test]
     fn test_to_url() {
         let mut query_search: IndexMap<String, String> = IndexMap::new();
@@ -67,15 +78,25 @@ mod test {
         assert_eq!(url, url_to_compare);
 
         let url: Url = ExampleRoutes::Other {
+            id: "2".to_string(),
             children: Settings::Projects {
                 query: query_search.clone(),
             },
         }
         .to_url();
 
-        let url_to_compare: Url = "/other/projects?user=arn&role=baby_programmer&location=norway"
+        let url_to_compare: Url = "/other/2/projects?user=arn&role=baby_programmer&location=norway"
             .parse()
             .unwrap();
+        assert_eq!(url, url_to_compare);
+
+        let url: Url = ExampleRoutes::Other {
+            id: "2".to_string(),
+            children: Settings::Api(Apis::Facebook),
+        }
+        .to_url();
+
+        let url_to_compare: Url = "/other/2/api/facebook".parse().unwrap();
         assert_eq!(url, url_to_compare);
     }
 
@@ -102,6 +123,23 @@ mod test {
             route,
             ExampleRoutes::Profile {
                 id: "1".to_string(),
+            }
+        );
+
+        let mut query: IndexMap<String, String> = IndexMap::new();
+
+        query.insert("user".to_string(), "arn".to_string());
+        query.insert("role".to_string(), "baby_programmer".to_string());
+        query.insert("location".to_string(), "norway".to_string());
+
+        let string_to_compare = "/other/2/projects?user=arn&role=baby_programmer&location=norway";
+        assert_eq!(
+            ExampleRoutes::parse_path(string_to_compare).unwrap(),
+            ExampleRoutes::Other {
+                id: "2".to_string(),
+                children: Settings::Projects {
+                    query: query.clone(),
+                },
             }
         );
     }
@@ -151,6 +189,25 @@ mod test {
         let route = ExampleRoutes::Dashboard(DashboardRoutes::Stuff {
             id: "123".to_string(),
         });
+
+        let mut query: IndexMap<String, String> = IndexMap::new();
+
+        query.insert("user".to_string(), "arn".to_string());
+        query.insert("role".to_string(), "baby_programmer".to_string());
+        query.insert("location".to_string(), "norway".to_string());
+
+        let url_to_compare: Url = "/other/2/projects?user=arn&role=baby_programmer&location=norway"
+            .parse()
+            .unwrap();
+        assert_eq!(
+            ExampleRoutes::from_url(url_to_compare).unwrap(),
+            ExampleRoutes::Other {
+                id: "2".to_string(),
+                children: Settings::Projects {
+                    query: query.clone(),
+                },
+            }
+        );
     }
 
     #[wasm_bindgen_test]

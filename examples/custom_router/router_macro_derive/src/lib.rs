@@ -180,6 +180,8 @@ pub fn derive_as_path(item: TokenStream) -> TokenStream {
         }
         impl ParsePath for #ident {
             fn parse_path(path: &str) -> std::result::Result<Self, ParseError> {
+
+            log!(  format!("parsing for  {:?} with string {:?}", #name , path));
                 let next = path.trim_start_matches("/");
                 Err(ParseError::NoMatch)
                     #(.or_else(|err|
@@ -456,6 +458,10 @@ fn parse_struct_variant(
         .find(|f| f.ident.as_ref().unwrap() == "children");
 
     let structs_tuple = (id_param, query_parameters, children);
+
+    let with_id_param = structs_tuple.0.is_some();
+    let with_query_params = structs_tuple.1.is_some();
+    let with_children = structs_tuple.2.is_some();
     let structs = build_advanced(structs_tuple);
     println!(" macro for  {}", name.clone().unwrap());
     println!(" tuple  {:?}", structs_tuple);
@@ -463,7 +469,7 @@ fn parse_struct_variant(
     let parser = match name {
         Some(name) => {
             quote! {      next.strip_prefix(#name).ok_or(err)
-                     .map(|rest| extract_url_payload(rest.to_string()))
+                     .map(|rest| extract_url_payload(rest.to_string(),#with_id_param,#with_query_params,# with_children ))
             }
         }
         None => quote! {
@@ -535,7 +541,7 @@ fn build_advanced(structs_tuple: (Option<&Field>, Option<&Field>, Option<&Field>
         }
         (id, query, children) if id.is_some() && children.is_some() && query.is_none() => {
             let sub_enum = &children.clone().unwrap().ty;
-            quote! { id : id.unwrap(),children : #sub_enum:::parse_path(&children.unwrap()).unwrap()}
+            quote! { id : id.unwrap(),children : #sub_enum::parse_path(&children.unwrap()).unwrap()}
         }
         (id, query, children) if id.is_some() && query.is_none() && children.is_none() => {
             quote! { id : id.unwrap()}
