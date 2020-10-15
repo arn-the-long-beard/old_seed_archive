@@ -141,6 +141,7 @@ fn extract_routes(variants: Iter<Variant>, name: &Ident) -> Vec<TokenStream2> {
 // pub fn derive_default_route_attr(_item: TokenStream) -> TokenStream {
 //     TokenStream::new()
 // }
+/// Derive an enum as Routing for navigation
 #[proc_macro_error]
 #[proc_macro_derive(Routing, attributes(as_path))]
 pub fn derive_as_path(item: TokenStream) -> TokenStream {
@@ -225,6 +226,8 @@ fn variant_path_segment(ident: Ident, attrs: std::slice::Iter<'_, Attribute>) ->
         Some(name)
     }
 }
+
+/// Define from the enum the content of a route and how it will be converted
 fn variant_snippets(variants: Iter<'_, Variant>) -> (Vec<TokenStream2>, Vec<TokenStream2>) {
     let len = variants.len();
     let snippets = variants.enumerate().map(|(i, variant)| {
@@ -489,7 +492,7 @@ fn extract_id(mut fields: Iter<'_, Field>) -> TokenStream2 {
         quote! {}
     }
 }
-
+/// Rebuild the content of a variant depending of the fields present in the original enum
 fn build_structs(structs_tuple: (Option<&Field>, Option<&Field>, Option<&Field>)) -> TokenStream2 {
     match structs_tuple {
         (id, query, children) if id.is_some() && query.is_some() && children.is_some() => {
@@ -523,6 +526,8 @@ fn build_structs(structs_tuple: (Option<&Field>, Option<&Field>, Option<&Field>)
         }
     }
 }
+
+/// Assign only the payload defined by the field in the enu,
 fn build_advanced(structs_tuple: (Option<&Field>, Option<&Field>, Option<&Field>)) -> TokenStream2 {
     match structs_tuple {
         (id, query, children) if id.is_some() && query.is_some() && children.is_some() => {
@@ -558,7 +563,8 @@ fn build_advanced(structs_tuple: (Option<&Field>, Option<&Field>, Option<&Field>
     }
 }
 
-fn set_default_route(variants: Iter<'_, Variant>) -> Result<Variant> {
+/// Identify the default route and catch error if none or too many
+fn get_default_route(variants: Iter<'_, Variant>) -> Result<Variant> {
     let mut i = 0;
     let mut default_variant: Option<Variant> = None;
     for v in variants {
@@ -567,11 +573,6 @@ fn set_default_route(variants: Iter<'_, Variant>) -> Result<Variant> {
             i += 1;
             default_variant = Some(v.clone());
         }
-
-        println!("{:?}", v);
-        println!("{:?}", i);
-        println!("found default");
-        println!("{:?}", default);
     }
     if i == 0 {
         abort!(Diagnostic::new(
@@ -587,6 +588,8 @@ fn set_default_route(variants: Iter<'_, Variant>) -> Result<Variant> {
         Ok(default_variant.unwrap())
     }
 }
+
+/// Check if default_route exist
 fn variant_default_route(ident: Ident, attrs: std::slice::Iter<'_, Attribute>) -> bool {
     let mut attrs = attrs.filter_map(|attr| Some(attr.path.is_ident("default_route")));
 
@@ -611,7 +614,7 @@ pub fn define_as_root(item: TokenStream) -> TokenStream {
         )),
     };
     let variants = variants.iter();
-    let default_route = set_default_route(variants.clone());
+    let default_route = get_default_route(variants.clone());
 
     if default_route.is_err() {
         abort!(Diagnostic::new(
