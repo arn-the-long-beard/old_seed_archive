@@ -142,7 +142,7 @@ fn extract_routes(variants: Iter<Variant>, name: &Ident) -> Vec<TokenStream2> {
 //     TokenStream::new()
 // }
 #[proc_macro_error]
-#[proc_macro_derive(Routing, attributes(as_path, default_route))]
+#[proc_macro_derive(Routing, attributes(as_path))]
 pub fn derive_as_path(item: TokenStream) -> TokenStream {
     let DeriveInput { ident, data, .. } = parse_macro_input!(item as DeriveInput);
     let variants = match data {
@@ -153,7 +153,7 @@ pub fn derive_as_path(item: TokenStream) -> TokenStream {
         )),
     };
     let variants = variants.iter();
-    let (as_snippets, parse_snippets) = variant_snippets(variants);
+    let (as_snippets, parse_snippets) = variant_snippets(variants.clone());
     let name = ident.to_string();
     TokenStream::from(quote! {
      impl Navigation for #ident {
@@ -556,4 +556,92 @@ fn build_advanced(structs_tuple: (Option<&Field>, Option<&Field>, Option<&Field>
             quote! {}
         }
     }
+}
+
+fn set_default_route(variants: Iter<'_, Variant>) -> Result<Variant> {
+    let mut i = 0;
+    let mut default_variant: Option<Variant> = None;
+    for v in variants {
+        let default = variant_default_route(v.ident.clone(), v.attrs.iter());
+        if default {
+            i += 1;
+            default_variant = Some(v.clone());
+        }
+
+        println!("{:?}", v);
+        println!("{:?}", i);
+        println!("found default");
+        println!("{:?}", default);
+    }
+    if i == 0 {
+        abort!(Diagnostic::new(
+            Level::Error,
+            "You need at least one default route with the attribute #[default_route].".into()
+        ));
+    } else if i > 1 {
+        abort!(Diagnostic::new(
+            Level::Error,
+            "You cannot have multiple default routes.".into()
+        ));
+    } else {
+        Ok(default_variant.unwrap())
+    }
+}
+fn variant_default_route(ident: Ident, attrs: std::slice::Iter<'_, Attribute>) -> bool {
+    let mut attrs = attrs.filter_map(|attr| Some(attr.path.is_ident("default_route")));
+
+    if let Some(exist) = attrs.next() {
+        exist
+    } else {
+        false
+    }
+}
+
+/// Define a routing config as root for your navigation.
+/// It will contain the default route used by the router when it cannot find the right url
+#[proc_macro_error]
+#[proc_macro_derive(Root, attributes(default_route))]
+pub fn define_as_root(item: TokenStream) -> TokenStream {
+    let DeriveInput { ident, data, .. } = parse_macro_input!(item as DeriveInput);
+    let variants = match data {
+        Data::Enum(data) => data.variants,
+        _ => abort!(Diagnostic::new(
+            Level::Error,
+            "Can only derive AsPath for enums.".into()
+        )),
+    };
+    let variants = variants.iter();
+    let default_route = set_default_route(variants.clone());
+
+    if default_route.is_err() {
+        abort!(Diagnostic::new(
+            Level::Error,
+            "Could not find default_route".into()
+        ))
+    }
+
+    let default_variant = default_route.unwrap();
+
+    match default_variant.fields {
+        Fields::Named(_) => abort!(Diagnostic::new(
+            Level::Error,
+            "Default route need to be simple".into()
+        )),
+        Fields::Unnamed(_) => abort!(Diagnostic::new(
+            Level::Error,
+            "Default route need to be simple".into()
+        )),
+        Fields::Unit => {}
+    }
+
+    let default_variant_ident = default_variant.ident;
+
+    TokenStream::from(quote! {
+
+      impl Default for #ident {
+            fn default() -> #ident {
+                #ident::#default_variant_ident
+            }
+        }
+    })
 }

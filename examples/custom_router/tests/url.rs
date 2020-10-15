@@ -8,7 +8,7 @@ mod test {
     use super::*;
     use custom_router::router::url::Navigation;
     use enum_paths::{AsPath, ParseError, ParsePath};
-    use router_macro_derive::Routing;
+    use router_macro_derive::{Root, Routing};
     use seed::prelude::{IndexMap, *};
     use seed::util::log;
     use seed::{*, *};
@@ -16,7 +16,7 @@ mod test {
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
 
-    #[derive(Debug, PartialEq, Clone, Routing)]
+    #[derive(Debug, PartialEq, Clone, Routing, Root)]
     pub enum ExampleRoutes {
         Other {
             id: String,
@@ -30,6 +30,8 @@ mod test {
         Profile {
             id: String,
         },
+        #[default_route]
+        NotFound,
         #[as_path = ""]
         Root,
     }
@@ -259,5 +261,10 @@ mod test {
         let route = ExampleRoutes::Dashboard(DashboardRoutes::Stuff {
             id: "123".to_string(),
         });
+    }
+
+    #[wasm_bindgen_test]
+    fn test_default_route() {
+        assert_eq!(ExampleRoutes::default(), ExampleRoutes::NotFound);
     }
 }
