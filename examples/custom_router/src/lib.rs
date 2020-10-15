@@ -10,7 +10,7 @@ extern crate router_macro_derive;
 use crate::pages::dashboard::task_list::TasksRoutes;
 use crate::pages::dashboard::DashboardRoutes;
 use enum_paths::{AsPath, ParseError, ParsePath};
-use router_macro_derive::Routing;
+use router_macro_derive::{Root, Routing};
 pub mod models;
 mod pages;
 pub mod router;
@@ -31,7 +31,6 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
         .subscribe(Msg::UserLogged);
 
     let mut router: SuperRouter<Routes> = SuperRouter::new();
-    router.default_route = Some(Routes::NotFound); //replace with prop/attribute on enum
     router.init_url_and_navigation(url);
 
     Model {
@@ -42,7 +41,7 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy, EnumIter, AsPath)]
+#[derive(Debug, PartialEq, Clone, Copy, EnumIter, Routing, Root)]
 // need to make a derive (Routing) or something maybe
 pub enum Routes {
     Login,
@@ -52,6 +51,7 @@ pub enum Routes {
     // Admin {
     //     query: IndexMap<String, String>,
     // },
+    #[default_route]
     NotFound,
     #[as_path = ""]
     Home,

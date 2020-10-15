@@ -30,22 +30,20 @@ pub enum SuperMove {
     IsReady,
 }
 
-pub struct SuperRouter<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> {
+pub struct SuperRouter<Routes: Debug + PartialEq + ParsePath + Clone + Default> {
     pub current_route: Option<Routes>,
     pub current_history_index: usize,
-    pub default_route: Option<Routes>,
+    pub default_route: Routes,
     base_url: Url,
     pub current_move: SuperMove,
     history: Vec<Routes>,
 }
 
-impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> Default
-    for SuperRouter<Routes>
-{
+impl<Routes: Debug + PartialEq + Default + ParsePath + Clone> Default for SuperRouter<Routes> {
     fn default() -> Self {
         SuperRouter {
             current_history_index: 0,
-            default_route: None,
+            default_route: Routes::default(),
             history: Vec::new(),
             current_route: None,
             base_url: Url::new(), // should replace with current ,maybe ?
@@ -54,7 +52,7 @@ impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> De
     }
 }
 
-impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> SuperRouter<Routes> {
+impl<Routes: Debug + PartialEq + ParsePath + Default + Clone> SuperRouter<Routes> {
     pub fn new() -> SuperRouter<Routes> {
         SuperRouter::default()
     }
@@ -143,7 +141,7 @@ impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> Su
     /// # Note for now it does not add to history since we navigate inside
     fn forward(&mut self) -> bool {
         if let Some(next_route) = &self.can_forward_with_route() {
-            let path: String = next_route.as_path().to_string();
+            let path: String = next_route.clone().as_path().to_string();
             self.current_route = Routes::parse_path(&path).ok();
             self.current_history_index += 1;
             true
@@ -167,8 +165,8 @@ impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> Su
     /// navigate and then go back, you will not get the previous page, but the
     /// one just pushed into history before
     pub fn navigate_to_new(&mut self, route: &Routes) {
-        self.current_route = Some(*route);
-        self.push_to_history(*route);
+        self.current_route = Some(route.clone());
+        self.push_to_history(route.clone());
     }
 
     /// Match the url that change and update the router with the new current
@@ -180,7 +178,7 @@ impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> Su
             // log!("found route");
             self.navigate_to_new(&route_match);
         } else {
-            self.navigate_to_new(&self.default_route.expect("Should go back to default route"));
+            self.navigate_to_new(&self.default_route.clone());
         }
     }
 
@@ -201,14 +199,14 @@ impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> Su
     }
 
     pub fn url(&self, route: &Routes) -> Url {
-        let full_path = route.as_path();
+        let full_path = route.clone().as_path();
         let segments: Vec<&str> = full_path.as_str().split('/').collect();
         let url = Urls::new(self.base_url.clone()).build_url(segments);
         url
     }
 
     pub fn url_static(route: &Routes) -> Url {
-        let full_path = route.as_path();
+        let full_path = route.clone().as_path();
         let segments: Vec<&str> = full_path.as_str().split('/').collect();
         let url = Urls::new(Url::new()).build_url(segments);
         url
@@ -236,15 +234,15 @@ impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> Su
     }
     pub fn mapped_routes(&self) -> Vec<AvailableRoute> {
         let mut list: Vec<AvailableRoute> = Vec::new();
-        for route in Routes::iter() {
-            let is_active = self.is_current_route(&route);
-            list.push(AvailableRoute {
-                url: self.url(&route),
-                path: route.as_path(),
-                is_active,
-                name: "".to_string(),
-            })
-        }
+        // for route in Routes::iter() {
+        //     let is_active = self.is_current_route(&route);
+        //     list.push(AvailableRoute {
+        //         url: self.url(&route),
+        //         path: route.as_path(),
+        //         is_active,
+        //         name: "".to_string(),
+        //     })
+        // }
         list
     }
 }
@@ -256,61 +254,53 @@ pub struct AvailableRoute {
 }
 #[cfg(test)]
 mod test {
-    use crate::router::{Router, Urls};
+
     extern crate enum_paths;
     extern crate router_macro_derive;
     use super::*;
+    use crate::router::url::Navigation;
     use enum_paths::{AsPath, ParseError, ParsePath};
-
+    use router_macro_derive::{Root, Routing};
     use seed::Url;
     use strum::IntoEnumIterator;
     use wasm_bindgen_test::*;
 
     wasm_bindgen_test_configure!(run_in_browser);
 
-    #[derive(Debug, PartialEq, Copy, Clone, AsPath)]
+    #[derive(Debug, PartialEq, Copy, Clone, Routing)]
     pub enum DashboardAdminRoutes {
         Other,
         #[as_path = ""]
         Root,
     }
-    impl Default for DashboardAdminRoutes {
-        fn default() -> DashboardAdminRoutes {
-            DashboardAdminRoutes::Root
-        }
-    }
-
-    #[derive(Debug, PartialEq, Copy, Clone, AsPath)]
+    #[derive(Debug, PartialEq, Copy, Clone, Routing)]
     pub enum DashboardRoutes {
         Admin(DashboardAdminRoutes),
         Profile(u32),
         #[as_path = ""]
         Root,
     }
-    impl Default for DashboardRoutes {
-        fn default() -> DashboardRoutes {
-            DashboardRoutes::Root
-        }
-    }
-    #[derive(Debug, PartialEq, Copy, Clone, EnumIter, AsPath)]
+
+    #[derive(Debug, PartialEq, Copy, Clone, Routing, Root)]
     enum ExampleRoutes {
         Login,
         Register,
         Stuff,
         Dashboard(DashboardRoutes),
+        #[default_route]
         NotFound,
         #[as_path = ""]
         Home,
     }
 
-    #[wasm_bindgen_test]
-    fn test_iteration() {
-        for route in ExampleRoutes::iter() {
-
-            // println!("stuff {:?}", answer());
-        }
-        assert_eq!(ExampleRoutes::iter().len(), 6);
-    }
+    // #[wasm_bindgen_test]
+    // fn test_iteration() {
+    //     for route in ExampleRoutes::iter() {
+    //
+    //         // println!("stuff {:?}", answer());
+    //     }
+    //     assert_eq!(ExampleRoutes::iter().len(), 6);
+    // }
 
     // fn test_router_build() {
     //     // let mut router = SuperRouter::<ExampleRoutes>::new();
@@ -335,9 +325,6 @@ mod test {
     #[wasm_bindgen_test]
     fn test_router_default_route() {
         let mut router = SuperRouter::<ExampleRoutes>::new();
-        //todo we should have attribute in the enum for default route
-        router.default_route = Some(ExampleRoutes::NotFound);
-
         let url = Url::new().add_path_part("example");
         router.navigate_to_url(url);
         assert_eq!(router.current_route.unwrap(), router.default_route.unwrap());
@@ -400,7 +387,6 @@ mod test {
     #[wasm_bindgen_test]
     fn test_navigation_to_route() {
         let mut router: SuperRouter<ExampleRoutes> = SuperRouter::new();
-
         router.navigate_to_new(&ExampleRoutes::parse_path("/dashboard/profile/1").unwrap());
 
         assert_eq!(
