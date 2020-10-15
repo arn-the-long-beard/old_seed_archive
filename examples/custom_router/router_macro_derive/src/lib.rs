@@ -141,7 +141,21 @@ fn extract_routes(variants: Iter<Variant>, name: &Ident) -> Vec<TokenStream2> {
 // pub fn derive_default_route_attr(_item: TokenStream) -> TokenStream {
 //     TokenStream::new()
 // }
+
 /// Derive an enum as Routing for navigation
+/// You can change the value of a path for a given route this way
+///
+/// ```rust
+///
+///     #[derive(Debug, PartialEq, Copy, Clone, Routing)]
+///     pub enum DashboardAdminRoutes {
+///         #[as_path = "my_stuff"]  // "/my_stuff"
+///         Other,
+///         #[as_path = ""]
+///         Root,  // "/"
+///     }
+/// ```
+///
 #[proc_macro_error]
 #[proc_macro_derive(Routing, attributes(as_path))]
 pub fn derive_as_path(item: TokenStream) -> TokenStream {
@@ -602,6 +616,16 @@ fn variant_default_route(ident: Ident, attrs: std::slice::Iter<'_, Attribute>) -
 
 /// Define a routing config as root for your navigation.
 /// It will contain the default route used by the router when it cannot find the right url
+/// ```rust
+///
+///     #[derive(Debug, PartialEq, Copy, Clone, Root)]
+///     pub enum DashboardAdminRoutes {
+///         #[default_route]
+///         NotFound,  // -> /blablablalbla -> /not_found
+///         Root,  
+///     }
+/// ```
+///
 #[proc_macro_error]
 #[proc_macro_derive(Root, attributes(default_route))]
 pub fn define_as_root(item: TokenStream) -> TokenStream {
