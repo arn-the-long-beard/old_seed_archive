@@ -25,7 +25,6 @@ mod test {
         Admin {
             query: IndexMap<String, String>,
         },
-
         Dashboard(DashboardRoutes),
         Profile {
             id: String,
