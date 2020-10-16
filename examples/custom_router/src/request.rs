@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub enum RequestState<T> {
     Success(T),
     Failed { message: String, code: String },
