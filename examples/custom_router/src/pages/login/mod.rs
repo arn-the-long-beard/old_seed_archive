@@ -3,7 +3,17 @@ use crate::models::user::LoggedUser;
 use crate::{request::RequestState, Msg as RootMsg};
 use seed::{prelude::*, *};
 
-#[derive(Default)]
+/// Can trigger specific update when loading the page
+pub fn init(url: Url, previous_state: &Model, order: &mut impl Orders<Msg>) -> Model {
+    log!("login init with previous state");
+    log!(previous_state);
+    Model {
+        credentials: Default::default(),
+        request_state: Default::default(),
+    }
+}
+
+#[derive(Default, Debug)]
 pub struct Model {
     credentials: LoginCredentials,
     request_state: RequestState<LoggedUser>,

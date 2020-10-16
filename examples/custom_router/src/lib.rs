@@ -10,12 +10,13 @@ extern crate router_macro_derive;
 use crate::pages::dashboard::task_list::TasksRoutes;
 use crate::pages::dashboard::DashboardRoutes;
 use enum_paths::{AsPath, ParseError, ParsePath};
-use router_macro_derive::{Root, Routing};
+use router_macro_derive::{InitState, Root, Routing};
 pub mod models;
 mod pages;
 pub mod router;
 mod theme;
 mod top_bar;
+use crate::router::state::StateInit;
 use crate::router::super_router::SuperRouter;
 use crate::router::url::{convert_to_string, Navigation};
 use strum::{EnumProperty, IntoEnumIterator};
@@ -41,9 +42,10 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy, EnumIter, Routing, Root)]
+#[derive(Debug, PartialEq, Clone, Copy, EnumIter, Routing, Root, InitState)]
 // need to make a derive (Routing) or something maybe
 pub enum Routes {
+    #[state_scope = "state.login => pages::login::init"]
     Login,
     Register,
     Dashboard(DashboardRoutes),
@@ -56,7 +58,53 @@ pub enum Routes {
     #[as_path = ""]
     Home,
 }
+// impl StateInit<Routes, State, Msg> for Routes {
+//     fn init<'b, 'c>(
+//         self,
+//         previous_state: &'b mut State,
+//         orders: &'c mut impl Orders<Msg>,
+//     ) -> &'b mut State {
+//         match self {
+//             Routes::Login => {
+//                 previous_state.login = pages::login::init(
+//                     self.to_url(),
+//                     &mut previous_state.login,
+//                     &mut orders.proxy(Msg::Login),
+//                 )
+//             }
+//             Routes::Register => {}
+//             Routes::Dashboard(routes) => {}
+//             Routes::NotFound => {}
+//             Routes::Home => {}
+//         }
+//         previous_state
+//     }
+// }
 
+// impl Routes {
+//     fn init(mut url: Url, orders: &mut impl Orders<Msg>) -> Self {
+//         match url.remaining_path_parts().as_slice() {
+//             [] => Self::Home,
+//             [CLIENTS_AND_PROJECTS] => Self::ClientsAndProjects(page::clients_and_projects::init(
+//                 url,
+//                 &mut orders.proxy(Msg::ClientsAndProjectsMsg),
+//             )),
+//             [TIME_TRACKER] => Self::TimeTracker(page::time_tracker::init(
+//                 url,
+//                 &mut orders.proxy(Msg::TimeTrackerMsg),
+//             )),
+//             [TIME_BLOCKS] => Self::TimeBlocks(page::time_blocks::init(
+//                 url,
+//                 &mut orders.proxy(Msg::TimeBlocksMsg),
+//             )),
+//             [SETTINGS] => Self::Settings(page::settings::init(
+//                 url,
+//                 &mut orders.proxy(Msg::SettingsMsg),
+//             )),
+//             _ => Self::NotFound,
+//         }
+//     }
+// }
 // ------ ------
 //     Model
 // ------ ------
@@ -102,7 +150,13 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::UrlChanged(subs::UrlChanged(url)) => {
             log!("URL has changed");
             model.router.confirm_navigation(url);
-            // model.state =  Route::init(url);
+
+            if let Some(current_route) = model.router.current_route {
+                current_route.init(model, orders);
+            }
+            // model.router.current_route.unwrap().init(model, orders);
+
+            // model.state =  Routes::init_state::<State>( previous_state, url , orders: &mut impl Orders<Msg>);
         }
         Msg::UrlRequested(request) => {
             log!("URL requested");

@@ -1,3 +1,5 @@
+mod init_state;
+
 #[cfg(test)]
 mod test {
     extern crate custom_router;
