@@ -357,6 +357,31 @@ pub fn define_as_root(item: TokenStream) -> TokenStream {
 }
 
 /// Give the ability to init states based on the routing
+///
+/// ```rust
+/// #[derive(Debug, PartialEq, Clone, Routing, Root, InitState)]
+///     #[state_scope = "state.stuff => profile::init"]
+///     pub enum ExampleRoutes {
+///         Other {
+///             id: String,
+///             children: Settings,
+///         },
+///
+///         Admin {
+///             query: IndexMap<String, String>,
+///         },
+///         Dashboard(DashboardRoutes),
+///         #[state_scope = "state.profile => profile::init"]
+///         Profile {
+///             id: String,
+///         },
+///         #[default_route]
+///         NotFound,
+///         #[as_path = ""]
+///         Root,
+///     }
+/// ```
+///
 #[proc_macro_error]
 #[proc_macro_derive(InitState, attributes(state_scope))]
 pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
