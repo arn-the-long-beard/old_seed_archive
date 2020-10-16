@@ -1,15 +1,10 @@
 use crate::{build_advanced, build_structs, get_string_from_attribute};
-use convert_case::{Case, Casing};
-use proc_macro::TokenStream;
-use proc_macro2::Span;
-use proc_macro_error::{abort, proc_macro_error, Diagnostic, Level};
-use quote::format_ident;
-use quote::{quote, ToTokens};
-use syn::{
-    export::TokenStream2, parse::Result, parse_macro_input, punctuated::Iter, Attribute, Data,
-    DataEnum, DeriveInput, Error, Field, Fields, Ident, Lit, LitStr, Meta, MetaNameValue, Path,
-    Variant,
-};
+use convert_case::Casing;
+
+use proc_macro_error::{abort, Diagnostic, Level};
+
+use quote::quote;
+use syn::{export::TokenStream2, punctuated::Iter, Attribute, Field, Fields, Ident, Variant};
 
 pub fn init_snippets(variants: Iter<'_, Variant>) -> Vec<TokenStream2> {
     let len = variants.len();
