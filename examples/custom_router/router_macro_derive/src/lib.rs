@@ -26,6 +26,7 @@ use syn::{
 mod root;
 mod routing;
 mod state;
+mod view;
 
 #[proc_macro_derive(Routes)]
 pub fn routes(input: TokenStream) -> TokenStream {
@@ -360,8 +361,9 @@ pub fn define_as_root(item: TokenStream) -> TokenStream {
 ///
 /// ```rust
 /// #[derive(Debug, PartialEq, Clone, Routing, Root, InitState)]
-///     #[state_scope = "state.stuff => profile::init"]
+///     
 ///     pub enum ExampleRoutes {
+///         #[state_scope = "state.stuff => profile::init"]
 ///         Other {
 ///             id: String,
 ///             children: Settings,
@@ -385,6 +387,69 @@ pub fn define_as_root(item: TokenStream) -> TokenStream {
 #[proc_macro_error]
 #[proc_macro_derive(InitState, attributes(state_scope))]
 pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
+    let DeriveInput { ident, data, .. } = parse_macro_input!(item as DeriveInput);
+    let variants = match data {
+        Data::Enum(data) => data.variants,
+        _ => abort!(Diagnostic::new(
+            Level::Error,
+            "Can only derive AsPath for enums.".into()
+        )),
+    };
+    let variants = variants.iter();
+    let init_snippets = init_snippets(variants.clone());
+    let name = ident.to_string();
+    TokenStream::from(quote! {
+         impl StateInit<#ident, Model, Msg> for #ident {
+        fn init<'b, 'c>(
+            &self,
+            previous_state: &'b mut Model,
+            orders: &'c mut impl Orders<Msg>,
+        ) -> &'b mut Model {
+            match self {
+                #(#init_snippets),*
+            }
+            previous_state
+        }
+    }
+        })
+}
+
+/// Give the ability to init states based on the routing
+///
+/// ```rust
+/// #[derive(Debug, PartialEq, Clone, Routing, Root, OnInit,OnView)]
+///    
+///     pub enum ExampleRoutes {
+///         #[state_scope = "stuff => profile::init"]
+///         #[view_scope = "stuff => other::view"]
+///         Other {
+///             id: String,
+///             children: Settings,
+///         },
+///         #[view_scope = "admin => admin::view"]
+///         Admin {
+///             query: IndexMap<String, String>,
+///         },
+///         #[view_scope = "dashboard => profile::view"]
+///         Dashboard(DashboardRoutes),
+///         #[state_scope = "profile => profile::init"]
+///         #[view_guard = "logged_user => guard::user"]
+///         #[view_scope = "profile => profile::view"]
+///         Profile {
+///             id: String,
+///         },
+///         #[view_scope = "not_found::view"]
+///         #[default_route]
+///         NotFound,
+///         #[view_scope = "home => profile::init"]
+///         #[as_path = ""]
+///         Root,
+///     }
+/// ```
+///
+#[proc_macro_error]
+#[proc_macro_derive(View, attributes(view_guard, view_scope))]
+pub fn derive_add_model_view(item: TokenStream) -> TokenStream {
     let DeriveInput { ident, data, .. } = parse_macro_input!(item as DeriveInput);
     let variants = match data {
         Data::Enum(data) => data.variants,
