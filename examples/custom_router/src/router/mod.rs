@@ -8,6 +8,7 @@ pub mod state;
 mod super_route;
 pub mod super_router;
 pub mod url;
+pub mod view;
 // impl Clone for ExampleRoutes {
 //     fn clone(&self) -> Self {
 //         *self

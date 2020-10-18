@@ -51,7 +51,10 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 }
             });
         }
-        Msg::Clear => {}
+        Msg::Clear => {
+            model.credentials = Default::default();
+            model.request_state = Default::default();
+        }
         Msg::LoginSucceed(logged_user) => {
             model.request_state = RequestState::Success(logged_user.clone());
             orders.notify(logged_user.clone());
