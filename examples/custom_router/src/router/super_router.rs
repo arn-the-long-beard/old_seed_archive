@@ -1,6 +1,5 @@
 use seed::Url;
 use std::fmt::Debug;
-use strum::IntoEnumIterator;
 
 // impl Clone for ExampleRoutes {
 //     fn clone(&self) -> Self {
@@ -262,7 +261,6 @@ mod test {
     use enum_paths::{AsPath, ParseError, ParsePath};
     use router_macro_derive::{Root, Routing};
     use seed::Url;
-    use strum::IntoEnumIterator;
     use wasm_bindgen_test::*;
 
     wasm_bindgen_test_configure!(run_in_browser);

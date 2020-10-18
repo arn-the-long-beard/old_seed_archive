@@ -3,9 +3,7 @@ use seed::{prelude::*, *};
 extern crate heck;
 use crate::models::user::LoggedUser;
 use crate::{theme::Theme, top_bar::TopBar};
-extern crate strum;
 #[macro_use]
-extern crate strum_macros;
 extern crate router_macro_derive;
 use crate::pages::dashboard::task_list::TasksRoutes;
 use crate::pages::dashboard::DashboardRoutes;
@@ -18,9 +16,8 @@ mod theme;
 mod top_bar;
 use crate::router::state::StateInit;
 use crate::router::super_router::SuperRouter;
-use crate::router::url::{convert_to_string, Navigation};
+use crate::router::url::Navigation;
 use crate::router::view::{Guarded, OnView};
-use strum::{EnumProperty, IntoEnumIterator};
 
 // ------ ------
 //     Init
@@ -43,7 +40,7 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy, EnumIter, Routing, Root, InitState)]
+#[derive(Debug, PartialEq, Clone, Copy, Routing, Root, InitState)]
 // need to make a derive (Routing) or something maybe
 pub enum Routes {
     #[state_scope = "state.login => pages::login::init"]

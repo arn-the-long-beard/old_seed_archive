@@ -1,11 +1,10 @@
-use crate::router::Urls;
+use crate::router::super_router::Urls;
 use enum_paths::ParsePath;
 use seed::prelude::wasm_bindgen::__rt::std::collections::HashMap;
 use seed::Url;
 use std::fmt::Debug;
-use strum::IntoEnumIterator;
 
-pub struct Route<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> {
+pub struct Route<Routes: Debug + PartialEq + ParsePath + Copy + Clone> {
     pub path: String,
     pub url: Option<Url>,
     pub guarded: bool,
@@ -14,7 +13,7 @@ pub struct Route<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy
     pub value: Routes,
 }
 
-impl<Routes: Debug + IntoEnumIterator + PartialEq + ParsePath + Copy + Clone> Route<Routes> {
+impl<Routes: Debug + PartialEq + ParsePath + Copy + Clone> Route<Routes> {
     pub fn new(guarded: bool, default: bool, value: Routes) -> Self {
         let full_path = value.as_path();
         let segments: Vec<&str> = full_path.split('/').collect();

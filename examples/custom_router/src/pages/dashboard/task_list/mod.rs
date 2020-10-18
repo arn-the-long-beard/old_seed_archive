@@ -19,7 +19,7 @@ impl Default for Model {
         }
     }
 }
-#[derive(Debug, EnumIter, PartialEq, Copy, Clone, AsPath)]
+#[derive(Debug, PartialEq, Copy, Clone, AsPath)]
 pub enum TasksRoutes {
     Task(u32),
     #[as_path = ""]
