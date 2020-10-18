@@ -363,7 +363,7 @@ pub fn define_as_root(item: TokenStream) -> TokenStream {
 /// #[derive(Debug, PartialEq, Clone, Routing, Root, InitState)]
 ///     
 ///     pub enum ExampleRoutes {
-///         #[state_scope = "state.stuff => profile::init"]
+///         #[state_scope = "stuff => profile::init"]
 ///         Other {
 ///             id: String,
 ///             children: Settings,
@@ -373,7 +373,7 @@ pub fn define_as_root(item: TokenStream) -> TokenStream {
 ///             query: IndexMap<String, String>,
 ///         },
 ///         Dashboard(DashboardRoutes),
-///         #[state_scope = "state.profile => profile::init"]
+///         #[state_scope = "profile => profile::init"]
 ///         Profile {
 ///             id: String,
 ///         },
