@@ -14,6 +14,7 @@ pub struct LoggedUser {
     pub last_name: String,
     username: String,
     email: String,
+    role: Role,
 }
 
 impl LoggedUser {
@@ -23,6 +24,7 @@ impl LoggedUser {
             last_name,
             username,
             email,
+            role: Role::StandardUser,
         }
     }
 }
@@ -33,5 +35,17 @@ impl LoggedUser {
     }
     pub fn email(&self) -> &str {
         &self.email
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+enum Role {
+    StandardUser,
+    Admin,
+}
+
+impl Default for Role {
+    fn default() -> Self {
+        Role::StandardUser
     }
 }
