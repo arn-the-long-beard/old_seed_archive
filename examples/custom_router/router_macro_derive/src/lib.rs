@@ -5,10 +5,10 @@ mod tests {
         assert_eq!(2 + 2, 4);
     }
 }
-#[macro_use]
-extern crate proc_macro_error;
+
 extern crate convert_case;
 extern crate proc_macro;
+extern crate proc_macro_error;
 use heck::SnakeCase;
 
 use crate::root::get_default_route;
@@ -43,7 +43,7 @@ pub fn routes(input: TokenStream) -> TokenStream {
     let name = &ast.ident;
     let variants = data.variants.iter();
 
-    let mut extracted_routes = extract_routes(variants, name);
+    let extracted_routes = extract_routes(variants, name);
 
     let extract_route = quote! {
          impl ExtractRoutes for #name {
@@ -397,7 +397,6 @@ pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
     };
     let variants = variants.iter();
     let init_snippets = init_snippets(variants.clone());
-    let name = ident.to_string();
     TokenStream::from(quote! {
          impl StateInit<#ident, Model, Msg> for #ident {
         fn init<'b, 'c>(
@@ -458,21 +457,5 @@ pub fn derive_add_model_view(item: TokenStream) -> TokenStream {
             "Can only derive AsPath for enums.".into()
         )),
     };
-    let variants = variants.iter();
-    let init_snippets = init_snippets(variants.clone());
-    let name = ident.to_string();
-    TokenStream::from(quote! {
-         impl StateInit<#ident, Model, Msg> for #ident {
-        fn init<'b, 'c>(
-            &self,
-            previous_state: &'b mut Model,
-            orders: &'c mut impl Orders<Msg>,
-        ) -> &'b mut Model {
-            match self {
-                #(#init_snippets),*
-            }
-            previous_state
-        }
-    }
-        })
+    TokenStream::from(quote! {})
 }
