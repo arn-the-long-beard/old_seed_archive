@@ -1,5 +1,5 @@
 use crate::models::auth::LoginCredentials;
-use crate::models::user::LoggedUser;
+use crate::models::user::{LoggedUser, Role};
 use crate::{request::RequestState, Msg as RootMsg};
 use seed::{prelude::*, *};
 
@@ -22,6 +22,7 @@ pub struct Model {
 pub enum Msg {
     Login,
     LoginSucceed(LoggedUser),
+    AutoLogin(Role),
     LoginFailed { message: String, code: String },
     PasswordChanged(String),
     TargetChanged(String),
@@ -66,6 +67,26 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             model.credentials.set_password(pwd);
         }
         Msg::TargetChanged(target) => model.credentials.set_target(target),
+        Msg::AutoLogin(role) => {
+            let logged_user = match role {
+                Role::StandardUser => LoggedUser::new(
+                    "John",
+                    "Doe",
+                    "JohnUnknown",
+                    "unknown@gmail.com",
+                    Role::StandardUser,
+                ),
+                Role::Admin => LoggedUser::new(
+                    "Janne",
+                    "Doe",
+                    "JanneUnknown",
+                    "unknown@gmail.com",
+                    Role::Admin,
+                ),
+            };
+            model.request_state = RequestState::Success(logged_user.clone());
+            orders.notify(logged_user.clone());
+        }
     }
 }
 pub fn view(model: &Model) -> Node<Msg> {
@@ -129,6 +150,16 @@ fn form(model: &Model, status: &bool) -> Node<Msg> {
             At::Type=> "submit"
                     },
         ],
-        IF!(*status =>  div![C!["lds-ring"], div![], div![], div![], div![]] )
+        IF!(*status =>  div![C!["lds-ring"], div![], div![], div![], div![]] ),
+        br![],
+        button![
+            "Sign in as John Doe",
+            ev(Ev::Click, |_| Msg::AutoLogin(Role::StandardUser)),
+        ],
+        br![],
+        button![
+            "Sign in as Janne Doe",
+            ev(Ev::Click, |_| Msg::AutoLogin(Role::Admin)),
+        ],
     ]
 }

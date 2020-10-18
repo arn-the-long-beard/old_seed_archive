@@ -92,6 +92,8 @@ pub enum Msg {
     Dashboard(pages::dashboard::Msg),
     GoBack,
     GoForward,
+    Logout,
+    GoLogin,
     SwitchToTheme(Theme),
 }
 
@@ -152,6 +154,8 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 .router
                 .request_moving_forward(|r| orders.notify(subs::UrlRequested::new(r)));
         }
+        Msg::Logout => model.logged_user = None,
+        Msg::GoLogin => model.router.current_route = Some(Routes::Login),
     }
 }
 
@@ -221,10 +225,11 @@ fn header(model: &Model) -> Node<Msg> {
     // }
     // list =
     div![
-        TopBar::new("Welcome Guest")
+        TopBar::new(who_is_connected(model))
             .style(model.theme.clone())
+            .set_user_login_state(model.logged_user.is_some())
             .content(div![
-                style! {St::Display => "block" },
+                style! {St::Display => "flex" },
                 button![
                     "back",
                     attrs! {
@@ -238,12 +243,40 @@ fn header(model: &Model) -> Node<Msg> {
                         At::Disabled =>  (!model.router.can_forward()).as_at_value(),
                     },
                     ev(Ev::Click, |_| Msg::GoForward)
-                ]
+                ],
+                span![style! {St::Flex => "5" },],
+                build_account_button(model.logged_user.is_some())
             ]),
         render_route(model)
     ]
 }
-//
+
+fn who_is_connected(model: &Model) -> String {
+    if let Some(user) = &model.logged_user {
+        let full_welcome = format!("Welcome {} {}", user.first_name, user.last_name);
+        full_welcome
+    } else {
+        "Welcome Guest".to_string()
+    }
+}
+
+fn build_account_button(user_logged_in: bool) -> Node<Msg> {
+    if user_logged_in {
+        span![button![
+            "logout ",
+            ev(Ev::Click, |_| Msg::Logout),
+            C!["user_button"],
+            i![C!["far fa-user-circle"]]
+        ]]
+    } else {
+        span![button![
+            "sign in ",
+            ev(Ev::Click, |_| Msg::GoLogin),
+            C!["user_button"],
+            i![C!["fas fa-user-circle"]]
+        ]]
+    }
+}
 
 fn render_route(model: &Model) -> Node<Msg> {
     ul![
@@ -320,28 +353,6 @@ fn render_route(model: &Model) -> Node<Msg> {
         ],
     ]
 }
-// fn render_route(route: &AvailableRoute) -> Node<Msg> {
-//     li![a![
-//         C!["route", IF!( route.is_active => "active-route" )],
-//         attrs! { At::Href => route.url },
-//         &route.name,
-//     ]]
-// }
-// // /// Render a route
-// fn render_route(router : &Router<Routes>, route : Routes) -> Node<Msg> {
-//     li![a![
-//         C![
-//             "route",
-//             IF!(router. ) => "active-route" )
-//         ],
-//         attrs! { At::Href => Urls::new(base_url).build_url(path) },
-//         path,
-//     ]]
-// }
-
-// fn authenticated_header(base_url: &Url, page: &Route) -> Node<Msg> {
-//     ul![route(base_url, page, "Dashboard"),]
-// }
 
 fn cannot_user_access_dashboard(model: &Model) -> bool {
     Routes::Dashboard(DashboardRoutes::Root)

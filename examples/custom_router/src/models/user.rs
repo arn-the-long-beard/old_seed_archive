@@ -18,13 +18,13 @@ pub struct LoggedUser {
 }
 
 impl LoggedUser {
-    pub fn new(first_name: String, last_name: String, username: String, email: String) -> Self {
+    pub fn new(first_name: &str, last_name: &str, username: &str, email: &str, role: Role) -> Self {
         LoggedUser {
-            first_name,
-            last_name,
-            username,
-            email,
-            role: Role::StandardUser,
+            first_name: first_name.to_string(),
+            last_name: last_name.to_string(),
+            username: username.to_string(),
+            email: email.to_string(),
+            role,
         }
     }
 }
@@ -39,7 +39,7 @@ impl LoggedUser {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
-enum Role {
+pub enum Role {
     StandardUser,
     Admin,
 }

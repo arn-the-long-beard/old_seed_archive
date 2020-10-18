@@ -44,6 +44,10 @@ impl<Ms: 'static> TopBar<Ms> {
         self.style(Theme::Dark)
     }
 
+    pub const fn set_user_login_state(mut self, is_user_logged_in: bool) -> Self {
+        self.user_logged_in = is_user_logged_in;
+        self
+    }
     // --- // ---
 
     pub const fn outline(mut self) -> Self {
@@ -88,7 +92,7 @@ impl<Ms: 'static> TopBar<Ms> {
     fn view(mut self) -> Node<Ms> {
         let tag = Tag::Div;
 
-        let content = self.title.take().map(Node::new_text);
+        let content = div![self.title.take().map(Node::new_text),];
 
         // if content.is_some() {
         //     let mut node = content.unwrap();
@@ -108,32 +112,37 @@ impl<Ms: 'static> TopBar<Ms> {
         let css = {
             let mut css = style! {
                 St::TextDecoration => "none",
-                St::Height=>"50px"
+                St::Height=>"60px"
             };
 
             let color = match self.style {
-                Theme::Dark => "darkblue",
-                Theme::Light => "lightgrey",
+                Theme::Dark => "lightgrey",
+                Theme::Light => "darkblue",
+            };
+
+            let background = match self.style {
+                Theme::Dark => "blue",
+                Theme::Light => "lightskyblue",
             };
 
             let font_color = match self.style {
                 Theme::Dark => "white",
                 Theme::Light => "black",
             };
-
-            if self.outline {
+            // if self.outline {
+            if self.user_logged_in {
                 css.merge(style! {
                     St::Color => color,
 
                     St::BackgroundColor => "transparent",
-                    St::Border => format!("{} {} {}", px(2), "solid", color),
+                    St::Border => format!("{} {} {}", px(5), "solid", color),
                 });
             } else {
                 css.merge(style! { St::Color => font_color,
                 // St::Display => "flex",
                 // St::AlignItems => "center",
                 // St::JustifyContent=> "center" ,
-                St::BackgroundColor => color });
+                St::BackgroundColor => background });
             };
 
             if self.block {
