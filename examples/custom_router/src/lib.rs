@@ -56,53 +56,7 @@ pub enum Routes {
     #[as_path = ""]
     Home,
 }
-// impl StateInit<Routes, State, Msg> for Routes {
-//     fn init<'b, 'c>(
-//         self,
-//         previous_state: &'b mut State,
-//         orders: &'c mut impl Orders<Msg>,
-//     ) -> &'b mut State {
-//         match self {
-//             Routes::Login => {
-//                 previous_state.login = pages::login::init(
-//                     self.to_url(),
-//                     &mut previous_state.login,
-//                     &mut orders.proxy(Msg::Login),
-//                 )
-//             }
-//             Routes::Register => {}
-//             Routes::Dashboard(routes) => {}
-//             Routes::NotFound => {}
-//             Routes::Home => {}
-//         }
-//         previous_state
-//     }
-// }
 
-// impl Routes {
-//     fn init(mut url: Url, orders: &mut impl Orders<Msg>) -> Self {
-//         match url.remaining_path_parts().as_slice() {
-//             [] => Self::Home,
-//             [CLIENTS_AND_PROJECTS] => Self::ClientsAndProjects(page::clients_and_projects::init(
-//                 url,
-//                 &mut orders.proxy(Msg::ClientsAndProjectsMsg),
-//             )),
-//             [TIME_TRACKER] => Self::TimeTracker(page::time_tracker::init(
-//                 url,
-//                 &mut orders.proxy(Msg::TimeTrackerMsg),
-//             )),
-//             [TIME_BLOCKS] => Self::TimeBlocks(page::time_blocks::init(
-//                 url,
-//                 &mut orders.proxy(Msg::TimeBlocksMsg),
-//             )),
-//             [SETTINGS] => Self::Settings(page::settings::init(
-//                 url,
-//                 &mut orders.proxy(Msg::SettingsMsg),
-//             )),
-//             _ => Self::NotFound,
-//         }
-//     }
-// }
 // ------ ------
 //     Model
 // ------ ------
@@ -330,16 +284,18 @@ fn render_route(model: &Model) -> Node<Msg> {
             li![a![
                 C![
                     "route",
-                    IF!(model.router.is_current_route(&Routes::Dashboard(DashboardRoutes::Root)) => "active-route" )
+                    IF!(model.router.is_current_route(&Routes::Dashboard(DashboardRoutes::Root)) => "active-route" ),
+                    IF!(cannot_user_access_dashboard(model) => "locked-route"   )
                 ],
                 attrs! { At::Href => model.router.url(&Routes::Dashboard(DashboardRoutes::Root)) },
                 "Profile",
             ]],
             li![a![
                 C![
-                    "route",
-                    IF!(model.router.is_current_route(&Routes::Dashboard(DashboardRoutes::Message)) => "active-route" )
-                ],
+                     "route",
+                     IF!(model.router.is_current_route(&Routes::Dashboard(DashboardRoutes::Message)) => "active-route" )
+                IF!(cannot_user_access_dashboard(model) => "locked-route"   )
+                 ],
                 attrs! { At::Href => model.router.url(&Routes::Dashboard(DashboardRoutes::Message)) },
                 "Messages",
             ]],
@@ -347,6 +303,7 @@ fn render_route(model: &Model) -> Node<Msg> {
                 C![
                     "route",
                     IF!(model.router.is_current_route(&Routes::Dashboard(DashboardRoutes::Statistics)) => "active-route" )
+                       IF!(cannot_user_access_dashboard(model) => "locked-route"   )
                 ],
                 attrs! { At::Href => model.router.url(&Routes::Dashboard(DashboardRoutes::Statistics)) },
                 "Statistics",
@@ -355,6 +312,7 @@ fn render_route(model: &Model) -> Node<Msg> {
                 C![
                     "route",
                     IF!(model.router.is_current_route(&Routes::Dashboard(DashboardRoutes::Tasks(TasksRoutes::Root))) => "active-route" )
+                    IF!(cannot_user_access_dashboard(model) => "locked-route"   )
                 ],
                 attrs! { At::Href => model.router.url(&Routes::Dashboard(DashboardRoutes::Tasks(TasksRoutes::Root))) },
                 "Tasks",
@@ -384,6 +342,12 @@ fn render_route(model: &Model) -> Node<Msg> {
 // fn authenticated_header(base_url: &Url, page: &Route) -> Node<Msg> {
 //     ul![route(base_url, page, "Dashboard"),]
 // }
+
+fn cannot_user_access_dashboard(model: &Model) -> bool {
+    Routes::Dashboard(DashboardRoutes::Root)
+        .check_before_load(model)
+        .is_none()
+}
 
 fn home(theme: &Theme) -> Node<Msg> {
     div![
