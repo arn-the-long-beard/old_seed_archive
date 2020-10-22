@@ -197,13 +197,14 @@ impl<Routes: Debug + PartialEq + ParsePath + Default + Clone> SuperRouter<Routes
         &self.base_url
     }
 
+    #[deprecated]
     pub fn url(&self, route: &Routes) -> Url {
         let full_path = route.clone().as_path();
         let segments: Vec<&str> = full_path.as_str().split('/').collect();
         let url = Urls::new(self.base_url.clone()).build_url(segments);
         url
     }
-
+    #[deprecated]
     pub fn url_static(route: &Routes) -> Url {
         let full_path = route.clone().as_path();
         let segments: Vec<&str> = full_path.as_str().split('/').collect();
