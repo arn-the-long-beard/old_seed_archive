@@ -3,6 +3,7 @@ use convert_case::Casing;
 
 use proc_macro_error::{abort, Diagnostic, Level};
 
+use crate::guard::variant_guard_path_tuple;
 use quote::quote;
 use syn::{export::TokenStream2, punctuated::Iter, Attribute, Field, Fields, Ident, Variant};
 
@@ -17,7 +18,7 @@ pub fn view_snippets(variants: Iter<'_, Variant>) -> Vec<TokenStream2> {
         } = variant;
         let view_scope = variant_view_path_tuple(ident.clone(), attrs.iter());
         let local_scope = variant_local_view_tuple(ident.clone(), attrs.iter());
-
+        let guard_scope = variant_guard_path_tuple(ident.clone(), attrs.iter());
         if view_scope.is_some() && local_scope.is_some() {
             abort!(Diagnostic::new(
                 Level::Error,
@@ -28,21 +29,29 @@ pub fn view_snippets(variants: Iter<'_, Variant>) -> Vec<TokenStream2> {
         if view_scope.is_none() && local_scope.is_none() {
             abort!(Diagnostic::new(
                 Level::Error,
-                "You need to define view loaded for your routes with #view_scope or #local_view".into()
+                "You need to define view loaded for your routes with #view_scope or #local_view"
+                    .into()
             ))
         }
 
         match fields {
-            Fields::Unit => view_as_unit_variant(ident.clone(), view_scope, local_scope),
+            Fields::Unit => {
+                view_as_unit_variant(ident.clone(), view_scope, local_scope, guard_scope)
+            }
             Fields::Unnamed(fields) => view_as_tuple_variant(
                 ident.clone(),
                 view_scope,
                 local_scope,
+                guard_scope,
                 fields.unnamed.iter(),
             ),
-            Fields::Named(fields) => {
-                view_as_struct_variant(ident.clone(), view_scope, local_scope, fields.named.iter())
-            }
+            Fields::Named(fields) => view_as_struct_variant(
+                ident.clone(),
+                view_scope,
+                local_scope,
+                guard_scope,
+                fields.named.iter(),
+            ),
             _ => abort!(Diagnostic::new(
                 Level::Error,
                 "Only unit or single tuple variants allowed.".into()
@@ -119,7 +128,7 @@ fn variant_local_view_tuple(
     if view_scope.is_empty() {
         None
     } else {
-        println!("got attribut => {:?}", view_scope);
+        println!("got attribute => {:?}", view_scope);
         let string_to_parse = view_scope;
         let view_scope_string: Vec<&str> = string_to_parse.split("=>").collect();
         let mut view_scope_string_iter = view_scope_string.iter();
@@ -145,8 +154,9 @@ fn view_as_unit_variant(
     ident: Ident,
     view_scope: Option<(String, String)>,
     local_scope: Option<(String, String)>,
+    guard_scope: Option<(String, String, String)>,
 ) -> TokenStream2 {
-    let format = if let Some((path, view)) = view_scope {
+    let load_view = if let Some((path, view)) = view_scope {
         let token: TokenStream2 = format!(
             " {}(&scoped_state.{}).map_msg(Msg::{})",
             view,
@@ -170,15 +180,38 @@ fn view_as_unit_variant(
     } else {
         quote! { {} }
     };
+    let with_guard_or_not = match guard_scope {
+        None => {
+            quote! { #load_view }
+        }
+        Some((_, _, redirect)) => {
+            let redirect: TokenStream2 = format!(" {}(&scoped_state)", redirect).parse().unwrap();
+            quote! {
+                 if let Some(authenticated) = self.check_before_load(&scoped_state) {
+                       if authenticated {
+                          #load_view
+                        }
+                        else {
+                          #redirect
+                        }
+                    } else {
+                       #redirect
+                    }
+
+            }
+        }
+    };
 
     quote! {
-        Self::#ident => #format
+        Self::#ident => #load_view
     }
 }
 fn view_as_tuple_variant(
     ident: Ident,
     view_scope: Option<(String, String)>,
     local_scope: Option<(String, String)>,
+    guard_scope: Option<(String, String, String)>,
+
     fields: Iter<'_, Field>,
 ) -> TokenStream2 {
     if fields.clone().count() != 1 {
@@ -188,7 +221,7 @@ fn view_as_tuple_variant(
         ))
     }
     // Do stuff about nested init maybe ?
-    let format = if let Some((path, view)) = view_scope {
+    let load_view = if let Some((path, view)) = view_scope {
         let token: TokenStream2 = format!(
             " {}(nested, &scoped_state.{}).map_msg(Msg::{})",
             view,
@@ -212,8 +245,31 @@ fn view_as_tuple_variant(
     } else {
         quote! { {} }
     };
+
+    let with_guard_or_not = match guard_scope {
+        None => {
+            quote! { #load_view }
+        }
+        Some((_, _, redirect)) => {
+            let redirect: TokenStream2 = format!(" {}(&scoped_state)", redirect).parse().unwrap();
+            quote! {
+                 if let Some(authenticated) = self.check_before_load(&scoped_state) {
+                       if authenticated {
+                          #load_view
+                        }
+                        else {
+                          #redirect
+                        }
+                    } else {
+                       #redirect
+                    }
+
+            }
+        }
+    };
+
     quote! {
-        Self::#ident(nested) => #format
+        Self::#ident(nested) => #with_guard_or_not
     }
 }
 
@@ -221,6 +277,8 @@ fn view_as_struct_variant(
     ident: Ident,
     view_scope: Option<(String, String)>,
     local_scope: Option<(String, String)>,
+    guard_scope: Option<(String, String, String)>,
+
     fields: Iter<'_, Field>,
 ) -> TokenStream2 {
     let mut fields_to_extract = fields.clone();
@@ -244,7 +302,7 @@ fn view_as_struct_variant(
     // do stuff also for children init maybe
     //  let string_enum = build_string(structs_tuple, name.clone());
 
-    let format = if let Some((path, view)) = view_scope {
+    let load_view = if let Some((path, view)) = view_scope {
         let token: TokenStream2 = if children.is_some() {
             format!(
                 " {}(&children,&scoped_state.{}).map_msg(Msg::{})",
@@ -280,7 +338,28 @@ fn view_as_struct_variant(
         quote! { {} }
     };
 
+    let with_guard_or_not = match guard_scope {
+        None => {
+            quote! { #load_view }
+        }
+        Some((_, _, redirect)) => {
+            let redirect: TokenStream2 = format!(" {}(&scoped_state)", redirect).parse().unwrap();
+            quote! {
+                 if let Some(authenticated) = self.check_before_load(&scoped_state) {
+                       if authenticated {
+                          #load_view
+                        }
+                        else {
+                          #redirect
+                        }
+                    } else {
+                       #redirect
+                    }
+
+            }
+        }
+    };
     quote! {
-        Self::#ident{#structs} => #format
+        Self::#ident{#structs} => #with_guard_or_not
     }
 }

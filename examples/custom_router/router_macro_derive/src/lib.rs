@@ -15,6 +15,7 @@ use crate::root::get_default_route;
 use crate::routing::routing_variant_snippets;
 use proc_macro::TokenStream;
 
+use crate::guard::guard_snippets;
 use crate::state::init_snippets;
 use crate::view::view_snippets;
 use proc_macro_error::{abort, proc_macro_error, Diagnostic, Level};
@@ -24,6 +25,7 @@ use syn::{
     DataEnum, DeriveInput, Error, Field, Fields, Ident, Lit, LitStr, Meta, MetaNameValue, Variant,
 };
 
+mod guard;
 mod root;
 mod routing;
 mod state;
@@ -475,8 +477,10 @@ pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
 ///     }
 /// ```
 ///
+/// TODO : maybe add #view_guard for granular guard ?
+///
 #[proc_macro_error]
-#[proc_macro_derive(OnView, attributes(view_guard, view_scope, local_view))]
+#[proc_macro_derive(OnView, attributes(guard_scope, view_scope, local_view))]
 pub fn derive_add_model_view(item: TokenStream) -> TokenStream {
     let DeriveInput { ident, data, .. } = parse_macro_input!(item as DeriveInput);
     let variants = match data {
@@ -488,6 +492,7 @@ pub fn derive_add_model_view(item: TokenStream) -> TokenStream {
     };
     let variants = variants.iter();
     let view_snippets = view_snippets(variants.clone());
+    let guard_snippets = guard_snippets(variants.clone());
     TokenStream::from(quote! {
     impl ToView<#ident, Model, Msg> for  #ident {
         fn view(&self, scoped_state: &Model) -> Node<Msg> {
@@ -495,7 +500,16 @@ pub fn derive_add_model_view(item: TokenStream) -> TokenStream {
                  #(#view_snippets),*
             }
         }
+
+        fn check_before_load(&self, scoped_state: &Model) -> Option<bool> {
+            match self {
+                 #(#guard_snippets),*
+            }
+        }
     }
+
+
+
 
     })
 }
