@@ -417,7 +417,7 @@ pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
 /// Give the ability to init states based on the routing
 ///
 /// ```rust
-/// #[derive(Debug, PartialEq, Clone, Routing, Root, OnInit,ToView)]
+/// #[derive(Debug, PartialEq, Clone, Routing, Root, OnInit,OnView)]
 ///    
 ///     pub enum ExampleRoutes {
 ///         #[state_scope = "stuff => profile::init"]
@@ -448,7 +448,7 @@ pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
 /// ```
 ///
 #[proc_macro_error]
-#[proc_macro_derive(View, attributes(view_guard, view_scope, local_view))]
+#[proc_macro_derive(OnView, attributes(view_guard, view_scope, local_view))]
 pub fn derive_add_model_view(item: TokenStream) -> TokenStream {
     let DeriveInput { ident, data, .. } = parse_macro_input!(item as DeriveInput);
     let variants = match data {
