@@ -8,15 +8,16 @@ extern crate router_macro_derive;
 use crate::pages::dashboard::task_list::TasksRoutes;
 use crate::pages::dashboard::DashboardRoutes;
 use enum_paths::{AsPath, ParseError, ParsePath};
-use router_macro_derive::{InitState, Root, Routing, View};
+use router_macro_derive::{InitState, OnView, Root, Routing};
 pub mod models;
 mod pages;
 pub mod router;
 mod theme;
 mod top_bar;
+use crate::pages::admin::AdminRoutes;
 use crate::router::state::StateInit;
 use crate::router::super_router::SuperRouter;
-use crate::router::url::Navigation;
+use crate::router::url::{extract_url_payload, Navigation};
 use crate::router::view::{Guarded, ToView};
 
 // ------ ------
@@ -40,7 +41,7 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy, Routing, Root, InitState, View)]
+#[derive(Debug, PartialEq, Clone, Routing, Root, InitState, OnView)]
 // need to make a derive (Routing) or something maybe
 pub enum Routes {
     #[state_scope = "state.login => pages::login::init"]
@@ -51,9 +52,9 @@ pub enum Routes {
     #[view_scope = "state.dashboard=> pages::dashboard::cross"]
     Dashboard(DashboardRoutes),
     // #[default_route]
-    // Admin {
-    //     query: IndexMap<String, String>,
-    // },
+    #[state_scope = "state.admin => pages::admin::init"]
+    #[view_scope = "state.admin => pages::admin::view"]
+    Admin { id: String, children: AdminRoutes },
     #[default_route]
     #[local_view = " => not_found"]
     NotFound,
@@ -110,6 +111,7 @@ pub struct State {
     pub register: pages::register::Model,
     pub login: pages::login::Model,
     pub dashboard: pages::dashboard::Model,
+    pub admin: pages::admin::Model,
 }
 
 // ------ ------
@@ -124,6 +126,7 @@ pub enum Msg {
     UrlRequested(subs::UrlRequested),
     Register(pages::register::Msg),
     Login(pages::login::Msg),
+    Admin(pages::admin::Msg),
     UserLogged(LoggedUser),
     Dashboard(pages::dashboard::Msg),
     GoBack,
@@ -139,9 +142,10 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match msg {
         Msg::UrlChanged(subs::UrlChanged(url)) => {
             log!("URL has changed");
+
             model.router.confirm_navigation(url);
 
-            if let Some(current_route) = model.router.current_route {
+            if let Some(current_route) = model.router.current_route.clone() {
                 current_route.init(model, orders);
             }
             // model.router.current_route.unwrap().init(model, orders);
@@ -169,6 +173,12 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             dashboard_message,
             &mut model.state.dashboard,
             &mut orders.proxy(Msg::Dashboard),
+        ),
+
+        Msg::Admin(admin_msg) => pages::admin::update(
+            admin_msg,
+            &mut model.state.admin,
+            &mut orders.proxy(Msg::Admin),
         ),
         Msg::UserLogged(user) => {
             log!("got user logged");
@@ -319,6 +329,33 @@ fn render_route(model: &Model) -> Node<Msg> {
             attrs! { At::Href => model.router.url(&Routes::Home) },
             "Home",
         ]],
+        li![a![C!["route"], "Admin",]],
+        ul![
+            li![a![
+                C![
+                    "route",
+                    IF!(model.router.is_current_route(&Routes::Admin { id : "1".to_string() , children : AdminRoutes::Root}) => "active-route" ),
+                ],
+                attrs! { At::Href => model.router.url(&Routes::Admin { id : "1".to_string() , children : AdminRoutes::Root}) },
+                "Admin project 1",
+            ]],
+            li![a![
+                C![
+                    "route",
+                    IF!(model.router.is_current_route(&Routes::Admin { id : "2".to_string() , children : AdminRoutes::Root}) => "active-route" ),
+                ],
+                attrs! { At::Href => model.router.url(&Routes::Admin { id : "2".to_string() , children : AdminRoutes::Root}) },
+                "Admin project 2",
+            ]],
+            li![a![
+                C![
+                    "route",
+                    IF!(model.router.is_current_route(&Routes::Admin { id : "1".to_string() , children : AdminRoutes::Manager}) => "active-route" ),
+                ],
+                attrs! { At::Href => model.router.url(&Routes::Admin { id : "1".to_string() , children : AdminRoutes::Manager}) },
+                "Manage project 1",
+            ]],
+        ],
         li![a![C!["route"], "Dashboard",]],
         ul![
             li![a![
