@@ -463,7 +463,7 @@ pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
 ///         #[view_scope = "dashboard => profile::view"]
 ///         Dashboard(DashboardRoutes),
 ///         #[state_scope = "profile => profile::init"]
-///         #[view_guard = "logged_user => guard::user"]
+///         #[view_guard = "logged_user => guard::user => forbidden_view"]
 ///         #[view_scope = "profile => profile::view"]
 ///         Profile {
 ///             id: String,
