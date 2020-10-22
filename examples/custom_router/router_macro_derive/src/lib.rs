@@ -16,6 +16,7 @@ use crate::routing::routing_variant_snippets;
 use proc_macro::TokenStream;
 
 use crate::state::init_snippets;
+use crate::view::view_snippets;
 use proc_macro_error::{abort, proc_macro_error, Diagnostic, Level};
 use quote::quote;
 use syn::{
@@ -416,7 +417,7 @@ pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
 /// Give the ability to init states based on the routing
 ///
 /// ```rust
-/// #[derive(Debug, PartialEq, Clone, Routing, Root, OnInit,OnView)]
+/// #[derive(Debug, PartialEq, Clone, Routing, Root, OnInit,ToView)]
 ///    
 ///     pub enum ExampleRoutes {
 ///         #[state_scope = "stuff => profile::init"]
@@ -447,7 +448,7 @@ pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
 /// ```
 ///
 #[proc_macro_error]
-#[proc_macro_derive(View, attributes(view_guard, view_scope))]
+#[proc_macro_derive(View, attributes(view_guard, view_scope, local_view))]
 pub fn derive_add_model_view(item: TokenStream) -> TokenStream {
     let DeriveInput { ident, data, .. } = parse_macro_input!(item as DeriveInput);
     let variants = match data {
@@ -457,5 +458,16 @@ pub fn derive_add_model_view(item: TokenStream) -> TokenStream {
             "Can only derive AsPath for enums.".into()
         )),
     };
-    TokenStream::from(quote! {})
+    let variants = variants.iter();
+    let view_snippets = view_snippets(variants.clone());
+    TokenStream::from(quote! {
+    impl ToView<#ident, Model, Msg> for  #ident {
+        fn view(&self, scoped_state: &Model) -> Node<Msg> {
+            match self {
+                 #(#view_snippets),*
+            }
+        }
+    }
+
+    })
 }

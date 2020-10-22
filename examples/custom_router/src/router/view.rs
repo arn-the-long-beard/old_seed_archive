@@ -1,6 +1,6 @@
-use seed::prelude::{IntoNodes, Node};
+use seed::prelude::Node;
 
-pub trait OnView<Routes, State, Msg> {
+pub trait ToView<Routes, State, Msg> {
     fn view(&self, scoped_state: &State) -> Node<Msg>;
 }
 
