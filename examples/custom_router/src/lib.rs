@@ -350,6 +350,22 @@ fn render_route(model: &Model) -> Node<Msg> {
             li![a![
                 C![
                     "route",
+                    IF!(model.router.is_current_route(&Routes::Admin { id : "3".to_string() , children : AdminRoutes::Root}) => "active-route" ),
+                ],
+                attrs! { At::Href => model.router.url(&Routes::Admin { id : "3".to_string() , children : AdminRoutes::Root}) },
+                "Admin project 3",
+            ]],
+            li![a![
+                C![
+                    "route",
+                    IF!(model.router.is_current_route(&Routes::Admin { id : "3".to_string() , children : AdminRoutes::NotFound}) => "active-route" ),
+                ],
+                attrs! { At::Href => model.router.url(&Routes::Admin { id : "3".to_string() , children : AdminRoutes::NotFound}) },
+                "Not found project 3",
+            ]],
+            li![a![
+                C![
+                    "route",
                     IF!(model.router.is_current_route(&Routes::Admin { id : "1".to_string() , children : AdminRoutes::Manager}) => "active-route" ),
                 ],
                 attrs! { At::Href => model.router.url(&Routes::Admin { id : "1".to_string() , children : AdminRoutes::Manager}) },

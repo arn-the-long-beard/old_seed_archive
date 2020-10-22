@@ -1,4 +1,4 @@
-use crate::{build_advanced, build_structs, get_string_from_attribute};
+use crate::{build_advanced, build_string_payload, build_structs, get_string_from_attribute};
 use convert_case::Casing;
 
 use proc_macro_error::{abort, Diagnostic, Level};
@@ -165,20 +165,36 @@ fn init_as_struct_variant(
 
     // do stuff also for children init maybe
     //  let string_enum = build_string(structs_tuple, name.clone());
-
+    let payload: String = build_string_payload(structs_tuple);
     let format = match state_scope {
         Some((path, init)) => {
-            let token: TokenStream2 = format!(
-                " previous_state.{} ={}(self.to_url(),
+            let token: TokenStream2 = if payload.is_empty() {
+                format!(
+                    " previous_state.{} ={}(self.to_url(),
                     &mut previous_state.{},
                         &mut orders.proxy(Msg::{}),)  ",
-                path,
-                init,
-                path,
-                ident.to_string()
-            )
-            .parse()
-            .unwrap();
+                    path,
+                    init,
+                    path,
+                    ident.to_string()
+                )
+                .parse()
+                .unwrap()
+            } else {
+                format!(
+                    " previous_state.{} ={}(self.to_url(),
+                    &mut previous_state.{},
+                    {},
+                        &mut orders.proxy(Msg::{}),)  ",
+                    path,
+                    init,
+                    path,
+                    payload,
+                    ident.to_string()
+                )
+                .parse()
+                .unwrap()
+            };
             quote! {
             #token  }
         }

@@ -298,7 +298,35 @@ fn build_advanced(structs_tuple: (Option<&Field>, Option<&Field>, Option<&Field>
         }
     }
 }
+fn build_string_payload(structs_tuple: (Option<&Field>, Option<&Field>, Option<&Field>)) -> String {
+    match structs_tuple {
+        (id, query, children) if id.is_some() && query.is_some() && children.is_some() => {
+            "id,query,children".to_string()
+        }
 
+        (id, query, _) if id.is_some() && query.is_some() => "id,query".to_string(),
+        (id, query, children) if id.is_none() && query.is_some() && children.is_some() => {
+            "query,children".to_string()
+        }
+        (id, query, children) if id.is_some() && children.is_some() && query.is_none() => {
+            "id,children".to_string()
+        }
+        (id, query, children) if id.is_some() && query.is_none() && children.is_none() => {
+            "id".to_string()
+        }
+        (id, query, children) if query.is_some() && id.is_none() && children.is_none() => {
+            "query".to_string()
+        }
+        (id, query, children) if query.is_none() && id.is_none() & children.is_some() => {
+            "children".to_string()
+        }
+
+        (id, query, children) if query.is_none() && id.is_none() & children.is_none() => {
+            "".to_string()
+        }
+        (_, _, _) => "".to_string(),
+    }
+}
 /// Define a routing config as root for your navigation.
 /// It will contain the default route used by the router when it cannot find the right url
 /// ```rust
