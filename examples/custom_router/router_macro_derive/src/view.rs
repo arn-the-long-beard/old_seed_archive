@@ -25,6 +25,13 @@ pub fn view_snippets(variants: Iter<'_, Variant>) -> Vec<TokenStream2> {
             ))
         }
 
+        if view_scope.is_none() && local_scope.is_none() {
+            abort!(Diagnostic::new(
+                Level::Error,
+                "You need to define view loaded for your routes with #view_scope or #local_view".into()
+            ))
+        }
+
         match fields {
             Fields::Unit => view_as_unit_variant(ident.clone(), view_scope, local_scope),
             Fields::Unnamed(fields) => view_as_tuple_variant(
@@ -238,14 +245,25 @@ fn view_as_struct_variant(
     //  let string_enum = build_string(structs_tuple, name.clone());
 
     let format = if let Some((path, view)) = view_scope {
-        let token: TokenStream2 = format!(
-            " {}(&scoped_state.{}).map_msg(Msg::{})",
-            view,
-            path,
-            ident.to_string()
-        )
-        .parse()
-        .unwrap();
+        let token: TokenStream2 = if children.is_some() {
+            format!(
+                " {}(&children,&scoped_state.{}).map_msg(Msg::{})",
+                view,
+                path,
+                ident.to_string()
+            )
+            .parse()
+            .unwrap()
+        } else {
+            format!(
+                " {}(&scoped_state.{}).map_msg(Msg::{})",
+                view,
+                path,
+                ident.to_string()
+            )
+            .parse()
+            .unwrap()
+        };
         quote! {
         #token  }
     } else if let Some((path, view)) = local_scope {
