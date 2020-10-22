@@ -48,7 +48,7 @@ pub enum Routes {
     Login,
     #[view_scope = "state.register => pages::register::view"]
     Register,
-    #[view_scope = "state.dashboard=> pages::dashboard::view"]
+    #[view_scope = "state.dashboard=> pages::dashboard::cross"]
     Dashboard(DashboardRoutes),
     // #[default_route]
     // Admin {

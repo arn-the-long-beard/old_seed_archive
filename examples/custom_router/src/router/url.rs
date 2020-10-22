@@ -113,7 +113,6 @@ pub fn extract_query_params(url_string: String) -> IndexMap<String, String> {
 }
 #[cfg(test)]
 mod test {
-    use crate::router::{Router, Urls};
 
     extern crate enum_paths;
     extern crate router_macro_derive;

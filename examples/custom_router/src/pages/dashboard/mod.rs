@@ -62,11 +62,7 @@ pub fn view(model: &Model) -> Node<Msg> {
     div![&model.name]
 }
 
-pub fn cross(
-    dashboard_routes: DashboardRoutes,
-    model: &Model,
-    router: &SuperRouter<Routes>,
-) -> Node<Msg> {
+pub fn cross(dashboard_routes: &DashboardRoutes, model: &Model) -> Node<Msg> {
     match dashboard_routes {
         DashboardRoutes::Root => view(model),
         DashboardRoutes::Message => message::view(&model.state.message).map_msg(Msg::Message),
@@ -74,7 +70,7 @@ pub fn cross(
             statistics::view(&model.state.statistics).map_msg(Msg::Statistic)
         }
         DashboardRoutes::Tasks(task_routes) => {
-            task_list::view(task_routes, &model.state.tasks, router).map_msg(Msg::Tasks)
+            task_list::view(task_routes, &model.state.tasks).map_msg(Msg::Tasks)
         }
     }
 }

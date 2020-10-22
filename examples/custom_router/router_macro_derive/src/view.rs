@@ -183,7 +183,7 @@ fn view_as_tuple_variant(
     // Do stuff about nested init maybe ?
     let format = if let Some((path, view)) = view_scope {
         let token: TokenStream2 = format!(
-            " {}(&scoped_state.{}).map_msg(Msg::{})",
+            " {}(nested, &scoped_state.{}).map_msg(Msg::{})",
             view,
             path,
             ident.to_string()
@@ -194,7 +194,7 @@ fn view_as_tuple_variant(
         #token  }
     } else if let Some((path, view)) = local_scope {
         let token: TokenStream2 = if path.is_empty() {
-            format!(" {}(&scoped_state)", view).parse().unwrap()
+            format!(" {}(nested,&scoped_state)", view).parse().unwrap()
         } else {
             format!(" {}(&scoped_state.{})", view, path,)
                 .parse()

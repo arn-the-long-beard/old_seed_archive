@@ -1,5 +1,6 @@
 use crate::pages::dashboard::DashboardRoutes;
-use crate::router::super_router::{AvailableRoute, SuperRouter};
+use crate::router::super_router::{AvailableRoute, SuperRouter, Urls};
+use crate::router::url::Navigation;
 use crate::Routes;
 use enum_paths::{AsPath, ParseError, ParsePath};
 use seed::{prelude::*, *};
@@ -46,33 +47,34 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
 //     div!["my tasks", render_tasks(model, router),]
 // }
 
-fn render_tasks(model: &Model, router: &SuperRouter<Routes>) -> Node<Msg> {
-    ul![list(&model.tasks, router)]
+fn render_tasks(model: &Model) -> Node<Msg> {
+    ul![list(&model.tasks)]
 }
 
-pub fn list(tasks: &[task::Model], router: &SuperRouter<Routes>) -> Vec<Node<Msg>> {
+pub fn list(tasks: &[task::Model]) -> Vec<Node<Msg>> {
     let mut tasks_list = Vec::new();
     for t in tasks {
-        tasks_list.push(render_task(t, router));
+        tasks_list.push(render_task(t));
     }
     tasks_list
 }
 
-pub fn render_task(task: &task::Model, router: &SuperRouter<Routes>) -> Node<Msg> {
-    let task_url = SuperRouter::<Routes>::url_static(&Routes::Dashboard(DashboardRoutes::Tasks(
-        TasksRoutes::Task(task.task_no),
-    )));
-    let route = Routes::Dashboard(DashboardRoutes::Tasks(TasksRoutes::Task(task.task_no)));
+pub fn render_task(task: &task::Model) -> Node<Msg> {
+    let task_url =
+        Routes::Dashboard(DashboardRoutes::Tasks(TasksRoutes::Task(task.task_no))).to_url();
+    // let route = Routes::Dashboard(DashboardRoutes::Tasks(TasksRoutes::Task(task.task_no)));
     li![a![
         C![
             "route",
-            IF!(router.is_current_route(&route) => "active-route")
+            IF!(is_current_url(task_url.clone()) => "active-route")
         ],
-        attrs! { At::Href => task_url  },
+        attrs! { At::Href => task_url},
         task.task_title.to_string(),
     ]]
 }
-
+fn is_current_url(url: Url) -> bool {
+    Url::current() == url
+}
 pub fn get_dummy_data() -> Vec<task::Model> {
     vec![
         task::Model {
@@ -92,12 +94,12 @@ pub fn get_dummy_data() -> Vec<task::Model> {
         },
     ]
 }
-pub fn view(task_routes: TasksRoutes, model: &Model, router: &SuperRouter<Routes>) -> Node<Msg> {
+pub fn view(task_routes: &TasksRoutes, model: &Model) -> Node<Msg> {
     div![vec![
-        render_tasks(model, router),
+        render_tasks(model),
         match task_routes {
             TasksRoutes::Task(task_no) => {
-                let task = model.tasks.iter().find(|t| t.task_no == task_no);
+                let task = model.tasks.iter().find(|t| t.task_no == *task_no);
                 task::view(task.unwrap()).map_msg(Msg::Task)
             }
             TasksRoutes::Root => div!["no task selected"],
