@@ -14,7 +14,7 @@ pub struct LoggedUser {
     pub last_name: String,
     username: String,
     email: String,
-    role: Role,
+    pub role: Role,
 }
 
 impl LoggedUser {
