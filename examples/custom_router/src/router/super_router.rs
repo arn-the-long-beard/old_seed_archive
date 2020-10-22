@@ -254,14 +254,15 @@ pub struct AvailableRoute {
 }
 #[cfg(test)]
 mod test {
+    use seed::{prelude::IndexMap, Url};
 
     extern crate enum_paths;
     extern crate router_macro_derive;
     use super::*;
-    use crate::router::url::Navigation;
+    use crate::router::url::{extract_url_payload, Navigation};
     use enum_paths::{AsPath, ParseError, ParsePath};
     use router_macro_derive::{Root, Routing};
-    use seed::Url;
+
     use wasm_bindgen_test::*;
 
     wasm_bindgen_test_configure!(run_in_browser);
@@ -272,7 +273,7 @@ mod test {
         #[as_path = ""]
         Root,
     }
-    #[derive(Debug, PartialEq, Copy, Clone, Routing)]
+    #[derive(Debug, PartialEq, Clone, Routing)]
     pub enum DashboardRoutes {
         Admin(DashboardAdminRoutes),
         Profile(u32),
@@ -280,7 +281,7 @@ mod test {
         Root,
     }
 
-    #[derive(Debug, PartialEq, Copy, Clone, Routing, Root)]
+    #[derive(Debug, PartialEq, Clone, Routing, Root)]
     enum ExampleRoutes {
         Login,
         Register,
@@ -354,7 +355,7 @@ mod test {
         let url = router.base_url().clone().add_path_part("");
         router.navigate_to_url(url);
         assert_eq!(
-            router.current_route.unwrap(),
+            router.current_route.clone().unwrap(),
             ExampleRoutes::parse_path("").unwrap()
         );
 
@@ -365,7 +366,7 @@ mod test {
 
         router.navigate_to_url(admin_url);
         assert_eq!(
-            router.current_route.unwrap(),
+            router.current_route.clone().unwrap(),
             ExampleRoutes::parse_path("/dashboard/admin/other").unwrap()
         );
 
@@ -376,7 +377,7 @@ mod test {
 
         router.navigate_to_url(admin_url);
         assert_eq!(
-            router.current_route.unwrap(),
+            router.current_route.clone().unwrap(),
             ExampleRoutes::parse_path("/dashboard/profile/1").unwrap()
         );
         // eprintln!("{:?}", url.path());

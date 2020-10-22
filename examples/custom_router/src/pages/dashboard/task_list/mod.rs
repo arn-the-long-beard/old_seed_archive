@@ -1,6 +1,6 @@
 use crate::pages::dashboard::DashboardRoutes;
 use crate::router::super_router::{AvailableRoute, SuperRouter, Urls};
-use crate::router::url::Navigation;
+use crate::router::url::{extract_url_payload, Navigation};
 use crate::Routes;
 use enum_paths::{AsPath, ParseError, ParsePath};
 use seed::{prelude::*, *};
@@ -20,9 +20,11 @@ impl Default for Model {
         }
     }
 }
-#[derive(Debug, PartialEq, Copy, Clone, AsPath)]
+#[derive(Debug, PartialEq, Clone, Routing)]
 pub enum TasksRoutes {
-    Task(u32),
+    Task {
+        id: String,
+    },
     #[as_path = ""]
     Root,
 }
@@ -60,8 +62,10 @@ pub fn list(tasks: &[task::Model]) -> Vec<Node<Msg>> {
 }
 
 pub fn render_task(task: &task::Model) -> Node<Msg> {
-    let task_url =
-        Routes::Dashboard(DashboardRoutes::Tasks(TasksRoutes::Task(task.task_no))).to_url();
+    let task_url = Routes::Dashboard(DashboardRoutes::Tasks(TasksRoutes::Task {
+        id: task.task_no.to_string(),
+    }))
+    .to_url();
     // let route = Routes::Dashboard(DashboardRoutes::Tasks(TasksRoutes::Task(task.task_no)));
     li![a![
         C![
@@ -98,8 +102,8 @@ pub fn view(task_routes: &TasksRoutes, model: &Model) -> Node<Msg> {
     div![vec![
         render_tasks(model),
         match task_routes {
-            TasksRoutes::Task(task_no) => {
-                let task = model.tasks.iter().find(|t| t.task_no == *task_no);
+            TasksRoutes::Task { id } => {
+                let task = model.tasks.iter().find(|t| t.task_no.to_string() == *id);
                 task::view(task.unwrap()).map_msg(Msg::Task)
             }
             TasksRoutes::Root => div!["no task selected"],

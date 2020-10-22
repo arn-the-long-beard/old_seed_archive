@@ -268,4 +268,33 @@ mod test {
     fn test_default_route() {
         assert_eq!(ExampleRoutes::default(), ExampleRoutes::NotFound);
     }
+
+    #[wasm_bindgen_test]
+    fn test_get_id_param() {
+        let route = ExampleRoutes::Dashboard(DashboardRoutes::Stuff {
+            id: "123".to_string(),
+        });
+        assert_eq!(route.get_id_parameter().unwrap(), "123");
+
+        let route = DashboardRoutes::Stuff {
+            id: "123".to_string(),
+        };
+        assert_eq!(route.get_id_parameter().unwrap(), "123");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_get_query_parameters() {
+        let url: Url =
+            "/other/2/projects/14/facebook?user=arn&role=baby_programmer&location=norway"
+                .parse()
+                .unwrap();
+
+        let route = ExampleRoutes::from_url(url).unwrap();
+        let mut query: IndexMap<String, String> = IndexMap::new();
+        query.insert("user".to_string(), "arn".to_string());
+        query.insert("role".to_string(), "baby_programmer".to_string());
+        query.insert("location".to_string(), "norway".to_string());
+
+        assert_eq!(route.get_query_parameters().unwrap(), &query);
+    }
 }
