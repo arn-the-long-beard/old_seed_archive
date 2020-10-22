@@ -4,12 +4,27 @@ use crate::{request::RequestState, Msg as RootMsg};
 use seed::{prelude::*, *};
 
 /// Can trigger specific update when loading the page
-pub fn init(url: Url, previous_state: &Model, order: &mut impl Orders<Msg>) -> Model {
-    log!("login init with previous state");
-    log!(previous_state);
-    Model {
-        credentials: Default::default(),
-        request_state: Default::default(),
+pub fn init(
+    url: Url,
+    previous_state: &Model,
+    query: &IndexMap<String, String>,
+    order: &mut impl Orders<Msg>,
+) -> Model {
+    let name = query.get("name");
+
+    if let Some(name_from_query) = name {
+        let mut model = Model {
+            credentials: Default::default(),
+            request_state: Default::default(),
+        };
+
+        model.credentials.set_target(name_from_query.to_string());
+        model
+    } else {
+        Model {
+            credentials: Default::default(),
+            request_state: Default::default(),
+        }
     }
 }
 

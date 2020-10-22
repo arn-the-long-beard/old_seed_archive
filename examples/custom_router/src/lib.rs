@@ -17,7 +17,7 @@ mod top_bar;
 use crate::pages::admin::AdminRoutes;
 use crate::router::state::StateInit;
 use crate::router::super_router::SuperRouter;
-use crate::router::url::{extract_url_payload, Navigation};
+use crate::router::url::{convert_to_string, extract_url_payload, Navigation};
 use crate::router::view::{Guarded, ToView};
 
 // ------ ------
@@ -46,7 +46,7 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
 pub enum Routes {
     #[state_scope = "state.login => pages::login::init"]
     #[view_scope = "state.login => pages::login::view"]
-    Login,
+    Login { query: IndexMap<String, String> },
     #[view_scope = "state.register => pages::register::view"]
     Register,
     #[view_scope = "state.dashboard=> pages::dashboard::cross"]
@@ -201,7 +201,11 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 .request_moving_forward(|r| orders.notify(subs::UrlRequested::new(r)));
         }
         Msg::Logout => model.logged_user = None,
-        Msg::GoLogin => model.router.current_route = Some(Routes::Login),
+        Msg::GoLogin => {
+            model.router.current_route = Some(Routes::Login {
+                query: IndexMap::new(),
+            })
+        }
     }
 }
 
@@ -295,15 +299,29 @@ fn build_account_button(user_logged_in: bool) -> Node<Msg> {
     }
 }
 
+fn make_query_for_john_doe() -> IndexMap<String, String> {
+    let mut query: IndexMap<String, String> = IndexMap::new();
+    query.insert("name".to_string(), "JohnDoe".to_string());
+    query
+}
+
 fn render_route(model: &Model) -> Node<Msg> {
     ul![
         li![a![
             C![
                 "route",
-                IF!( model.router.is_current_route(&Routes::Login) => "active-route" )
+                IF!( model.router.is_current_route(&Routes::Login { query : IndexMap::new() }) => "active-route" )
             ],
-            attrs! { At::Href => model.router.url(&Routes::Login) },
+            attrs! { At::Href => Routes::Login { query : IndexMap::new() }.to_url() },
             "Login",
+        ]],
+        li![a![
+            C![
+                "route",
+                IF!( model.router.is_current_route(&Routes::Login { query : make_query_for_john_doe() }) => "active-route" )
+            ],
+            attrs! { At::Href => Routes::Login { query : make_query_for_john_doe() }.to_url()  },
+            "Login for JohnDoe",
         ]],
         li![a![
             C![
