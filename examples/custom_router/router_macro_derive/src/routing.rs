@@ -152,7 +152,7 @@ fn as_struct_variant(ident: Ident, name: Option<String>, fields: Iter<'_, Field>
 }
 
 fn build_query() -> TokenStream2 {
-    quote! {convert_to_string(query.clone())}
+    quote! { convert_to_string(query.clone())}
 }
 fn build_string(
     structs_tuple: (Option<&Field>, Option<&Field>, Option<&Field>),
@@ -172,7 +172,7 @@ fn build_string(
         (id, query, children) if id.is_none() && query.is_some() && children.is_some() => {
             let query_string = build_query();
 
-            quote! { format!("/{}/{}={}", #name,  children.clone().as_path(),#query_string)}
+            quote! { format!("/{}/{}?{}", #name,  children.clone().as_path(),#query_string)}
         }
         (id, query, children) if id.is_some() && query.is_none() && children.is_some() => {
             quote! { format!("/{}/{}{}", #name, id,  children.clone().as_path())}
