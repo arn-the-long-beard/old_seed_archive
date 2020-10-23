@@ -19,6 +19,7 @@ use crate::router::state::StateInit;
 use crate::router::super_router::SuperRouter;
 use crate::router::url::{convert_to_string, extract_url_payload, Navigation};
 use crate::router::view::ToView;
+use std::fmt::Debug;
 
 // ------ ------
 //     Init

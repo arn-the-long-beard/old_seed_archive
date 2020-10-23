@@ -5,7 +5,6 @@
 pub mod children;
 pub mod route;
 pub mod state;
-mod super_route;
 pub mod super_router;
 pub mod url;
 pub mod view;
