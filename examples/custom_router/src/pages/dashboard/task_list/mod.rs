@@ -1,5 +1,4 @@
 use crate::pages::dashboard::DashboardRoutes;
-use crate::router::super_router::{AvailableRoute, SuperRouter, Urls};
 use crate::router::url::{extract_url_payload, Navigation};
 use crate::Routes;
 use enum_paths::{AsPath, ParseError, ParsePath};

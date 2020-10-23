@@ -16,9 +16,9 @@ mod theme;
 mod top_bar;
 use crate::pages::admin::AdminRoutes;
 use crate::router::state::StateInit;
-use crate::router::super_router::SuperRouter;
 use crate::router::url::{convert_to_string, extract_url_payload, Navigation};
 use crate::router::view::ToView;
+use crate::router::Router;
 use std::fmt::Debug;
 
 // ------ ------
@@ -31,7 +31,7 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
         .subscribe(Msg::UrlRequested)
         .subscribe(Msg::UserLogged);
 
-    let mut router: SuperRouter<Routes> = SuperRouter::new();
+    let mut router: Router<Routes> = Router::new();
     router.init_url_and_navigation(url);
 
     Model {
@@ -138,7 +138,7 @@ fn forbidden_user(model: &Model) -> Node<Msg> {
 
 struct Model {
     state: State,
-    router: SuperRouter<Routes>,
+    router: Router<Routes>,
     logged_user: Option<LoggedUser>,
     theme: Theme,
 }
