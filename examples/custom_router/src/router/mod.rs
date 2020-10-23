@@ -28,7 +28,7 @@ pub enum Move {
     IsReady,
 }
 
-pub struct Router<Routes: Debug + PartialEq + ParsePath + Clone + Default> {
+pub struct Router<Routes: Debug + PartialEq + ParsePath + Clone + Default + Navigation> {
     pub current_route: Option<Routes>,
     pub current_history_index: usize,
     pub default_route: Routes,
@@ -37,7 +37,9 @@ pub struct Router<Routes: Debug + PartialEq + ParsePath + Clone + Default> {
     history: Vec<Routes>,
 }
 
-impl<Routes: Debug + PartialEq + Default + ParsePath + Clone> Default for Router<Routes> {
+impl<Routes: Debug + PartialEq + Default + ParsePath + Clone + Navigation> Default
+    for Router<Routes>
+{
     fn default() -> Self {
         Router {
             current_history_index: 0,
@@ -50,7 +52,7 @@ impl<Routes: Debug + PartialEq + Default + ParsePath + Clone> Default for Router
     }
 }
 
-impl<Routes: Debug + PartialEq + ParsePath + Default + Clone> Router<Routes> {
+impl<Routes: Debug + PartialEq + ParsePath + Default + Clone + Navigation> Router<Routes> {
     pub fn new() -> Router<Routes> {
         Router::default()
     }
@@ -183,32 +185,17 @@ impl<Routes: Debug + PartialEq + ParsePath + Default + Clone> Router<Routes> {
     pub fn request_moving_back<F: FnOnce(Url) -> R, R>(&mut self, func: F) {
         self.current_move = Move::IsMovingBack;
         if let Some(next_route) = &self.can_back_with_route() {
-            func(self.url(next_route));
+            func(next_route.to_url());
         }
     }
     pub fn request_moving_forward<F: FnOnce(Url) -> R, R>(&mut self, func: F) {
         self.current_move = Move::IsMovingForward;
         if let Some(next_route) = &self.can_forward_with_route() {
-            func(self.url(next_route));
+            func(next_route.to_url());
         }
     }
     pub fn base_url(&self) -> &Url {
         &self.base_url
-    }
-
-    #[deprecated]
-    pub fn url(&self, route: &Routes) -> Url {
-        let full_path = route.clone().as_path();
-        let segments: Vec<&str> = full_path.as_str().split('/').collect();
-        let url = Urls::new(self.base_url.clone()).build_url(segments);
-        url
-    }
-    #[deprecated]
-    pub fn url_static(route: &Routes) -> Url {
-        let full_path = route.clone().as_path();
-        let segments: Vec<&str> = full_path.as_str().split('/').collect();
-        let url = Urls::new(Url::new()).build_url(segments);
-        url
     }
 
     /// This method accept a given url and choose the appropriate update for the
@@ -231,26 +218,8 @@ impl<Routes: Debug + PartialEq + ParsePath + Default + Clone> Router<Routes> {
         }
         self.current_move = Move::IsReady;
     }
-    pub fn mapped_routes(&self) -> Vec<AvailableRoute> {
-        let mut list: Vec<AvailableRoute> = Vec::new();
-        // for route in Routes::iter() {
-        //     let is_active = self.is_current_route(&route);
-        //     list.push(AvailableRoute {
-        //         url: self.url(&route),
-        //         path: route.as_path(),
-        //         is_active,
-        //         name: "".to_string(),
-        //     })
-        // }
-        list
-    }
 }
-pub struct AvailableRoute {
-    pub url: Url,
-    pub is_active: bool,
-    pub path: String,
-    pub name: String,
-}
+
 #[cfg(test)]
 mod test {
     use seed::{prelude::IndexMap, Url};

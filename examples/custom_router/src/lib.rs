@@ -330,7 +330,7 @@ fn render_route(model: &Model) -> Node<Msg> {
                 "route",
                 IF!(model.router.is_current_route(&Routes::Register) => "active-route" )
             ],
-            attrs! { At::Href => model.router.url(&Routes::Register) },
+            attrs! { At::Href => &Routes::Register.to_url()  },
             "Register",
         ]],
         li![a![
@@ -338,7 +338,7 @@ fn render_route(model: &Model) -> Node<Msg> {
                 "route",
                 IF!(model.router.is_current_route(&Routes::NotFound) => "active-route" )
             ],
-            attrs! { At::Href => model.router.url(&Routes::NotFound) },
+            attrs! { At::Href => &Routes::NotFound.to_url() },
             "NotFound",
         ]],
         li![a![
@@ -346,7 +346,7 @@ fn render_route(model: &Model) -> Node<Msg> {
                 "route",
                 IF!(model.router.is_current_route(&Routes::Home) => "active-route" )
             ],
-            attrs! { At::Href => model.router.url(&Routes::Home) },
+            attrs! { At::Href => &Routes::Home.to_url()  },
             "Home",
         ]],
         li![a![C!["route"], "Admin",]],
@@ -358,7 +358,7 @@ fn render_route(model: &Model) -> Node<Msg> {
                     IF!(admin_guard(model).is_none() => "locked-route"   ),
                     IF!(admin_guard(model).is_some() && !admin_guard(model).unwrap() => "locked-admin-route" )
                 ],
-                attrs! { At::Href => model.router.url(&Routes::Admin { id : "1".to_string() , children : AdminRoutes::Root}) },
+                attrs! { At::Href => &Routes::Admin { id : "1".to_string() , children : AdminRoutes::Root}.to_url()  },
                 "Admin project 1",
             ]],
             li![a![
@@ -368,7 +368,7 @@ fn render_route(model: &Model) -> Node<Msg> {
                     IF!(admin_guard(model).is_none() => "locked-route"   ),
                     IF!(admin_guard(model).is_some() && !admin_guard(model).unwrap() => "locked-admin-route" )
                 ],
-                attrs! { At::Href => model.router.url(&Routes::Admin { id : "2".to_string() , children : AdminRoutes::Root}) },
+                attrs! { At::Href => &Routes::Admin { id : "2".to_string() , children : AdminRoutes::Root}.to_url()  },
                 "Admin project 2",
             ]],
             li![a![
@@ -378,7 +378,7 @@ fn render_route(model: &Model) -> Node<Msg> {
                     IF!(admin_guard(model).is_none() => "locked-route"   ),
                     IF!(admin_guard(model).is_some() && !admin_guard(model).unwrap() => "locked-admin-route" )
                 ],
-                attrs! { At::Href => model.router.url(&Routes::Admin { id : "3".to_string() , children : AdminRoutes::Root}) },
+                attrs! { At::Href => &Routes::Admin { id : "3".to_string() , children : AdminRoutes::Root}.to_url()  },
                 "Admin project 3",
             ]],
             li![a![
@@ -388,7 +388,7 @@ fn render_route(model: &Model) -> Node<Msg> {
                     IF!(admin_guard(model).is_none() => "locked-route"   ),
                     IF!(admin_guard(model).is_some() && !admin_guard(model).unwrap() => "locked-admin-route" )
                 ],
-                attrs! { At::Href => model.router.url(&Routes::Admin { id : "3".to_string() , children : AdminRoutes::NotFound}) },
+                attrs! { At::Href => &Routes::Admin { id : "3".to_string() , children : AdminRoutes::NotFound}.to_url()  },
                 "Not found project 3",
             ]],
             li![a![
@@ -398,7 +398,7 @@ fn render_route(model: &Model) -> Node<Msg> {
                     IF!(admin_guard(model).is_none() => "locked-route"   ),
                     IF!(admin_guard(model).is_some() && !admin_guard(model).unwrap() => "locked-admin-route" )
                 ],
-                attrs! { At::Href => model.router.url(&Routes::Admin { id : "1".to_string() , children : AdminRoutes::Manager}) },
+                attrs! { At::Href => &Routes::Admin { id : "1".to_string() , children : AdminRoutes::Manager}.to_url()  },
                 "Manage project 1",
             ]],
         ],
@@ -410,7 +410,7 @@ fn render_route(model: &Model) -> Node<Msg> {
                     IF!(model.router.is_current_route(&Routes::Dashboard(DashboardRoutes::Root)) => "active-route" ),
                     IF!(guard(model).is_none() => "locked-route"   )
                 ],
-                attrs! { At::Href => model.router.url(&Routes::Dashboard(DashboardRoutes::Root)) },
+                attrs! { At::Href => &Routes::Dashboard(DashboardRoutes::Root).to_url()  },
                 "Profile",
             ]],
             li![a![
@@ -419,7 +419,7 @@ fn render_route(model: &Model) -> Node<Msg> {
                      IF!(model.router.is_current_route(&Routes::Dashboard(DashboardRoutes::Message)) => "active-route" )
                 IF!(guard(model).is_none() => "locked-route"   )
                  ],
-                attrs! { At::Href => model.router.url(&Routes::Dashboard(DashboardRoutes::Message)) },
+                attrs! { At::Href => &Routes::Dashboard(DashboardRoutes::Message).to_url()  },
                 "Messages",
             ]],
             li![a![
@@ -428,7 +428,7 @@ fn render_route(model: &Model) -> Node<Msg> {
                     IF!(model.router.is_current_route(&Routes::Dashboard(DashboardRoutes::Statistics)) => "active-route" )
                        IF!(guard(model).is_none() => "locked-route"   )
                 ],
-                attrs! { At::Href => model.router.url(&Routes::Dashboard(DashboardRoutes::Statistics)) },
+                attrs! { At::Href => &Routes::Dashboard(DashboardRoutes::Statistics).to_url()  },
                 "Statistics",
             ]],
             li![a![
@@ -437,7 +437,7 @@ fn render_route(model: &Model) -> Node<Msg> {
                     IF!(model.router.is_current_route(&Routes::Dashboard(DashboardRoutes::Tasks(TasksRoutes::Root))) => "active-route" )
                     IF!(guard(model).is_none() => "locked-route"   )
                 ],
-                attrs! { At::Href => model.router.url(&Routes::Dashboard(DashboardRoutes::Tasks(TasksRoutes::Root))) },
+                attrs! { At::Href => &Routes::Dashboard(DashboardRoutes::Tasks(TasksRoutes::Root)).to_url()  },
                 "Tasks",
             ]],
         ],
