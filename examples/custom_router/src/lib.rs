@@ -7,17 +7,20 @@ use crate::{theme::Theme, top_bar::TopBar};
 extern crate router_macro_derive;
 use crate::pages::dashboard::task_list::TasksRoutes;
 use crate::pages::dashboard::DashboardRoutes;
+use crate::router::model::Init;
+use crate::router::url::Navigation;
+use crate::router::view::View;
 use enum_paths::{AsPath, ParseError, ParsePath};
-use router_macro_derive::{InitState, OnView, Root, Routing};
+use router_macro_derive::{Init, Root, Routing, View};
 pub mod models;
 mod pages;
 pub mod router;
 mod theme;
 mod top_bar;
 use crate::pages::admin::AdminRoutes;
-use crate::router::state::StateInit;
-use crate::router::url::{convert_to_string, extract_url_payload, Navigation};
-use crate::router::view::ToView;
+
+use crate::router::url::{convert_to_string, extract_url_payload};
+
 use crate::router::Router;
 use std::fmt::Debug;
 
@@ -42,10 +45,10 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Routing, Root, InitState, OnView)]
+#[derive(Debug, PartialEq, Clone, Routing, Root, Init, View)]
 // need to make a derive (Routing) or something maybe
 pub enum Routes {
-    #[state_scope = "state.login => pages::login::init"]
+    #[model_scope = "state.login => pages::login::init"]
     #[view_scope = "state.login => pages::login::view"]
     Login { query: IndexMap<String, String> },
     #[view_scope = "state.register => pages::register::view"]
@@ -54,7 +57,7 @@ pub enum Routes {
     #[guard_scope = " => guard => forbidden"]
     Dashboard(DashboardRoutes),
     // #[default_route]
-    #[state_scope = "state.admin => pages::admin::init"]
+    #[model_scope = "state.admin => pages::admin::init"]
     #[view_scope = "state.admin => pages::admin::view"]
     #[guard_scope = " => admin_guard => forbidden_user"]
     Admin { id: String, children: AdminRoutes },

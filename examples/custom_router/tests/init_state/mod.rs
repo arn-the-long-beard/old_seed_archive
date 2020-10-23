@@ -10,10 +10,11 @@ pub mod test {
 
     use self::custom_router::router::url::{convert_to_string, extract_url_payload};
     use super::*;
-    use custom_router::router::state::StateInit;
+    use custom_router::router::model::Init;
     use custom_router::router::url::Navigation;
+    use custom_router::router::view::View;
     use enum_paths::{AsPath, ParseError, ParsePath};
-    use router_macro_derive::{InitState, Root, Routing};
+    use router_macro_derive::{Init, Root, Routing, View};
     use seed::{prelude::*, *};
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);

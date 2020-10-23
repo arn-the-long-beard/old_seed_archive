@@ -1,5 +1,4 @@
-use crate::{build_advanced, build_string_payload, build_structs, get_string_from_attribute};
-use convert_case::Casing;
+use crate::{build_string_payload, build_structs, get_string_from_attribute};
 
 use proc_macro_error::{abort, Diagnostic, Level};
 
@@ -15,14 +14,14 @@ pub fn init_snippets(variants: Iter<'_, Variant>) -> Vec<TokenStream2> {
             fields,
             ..
         } = variant;
-        let state_scope = variant_state_path_tuple(ident.clone(), attrs.iter());
+        let model_scope = variant_model_path_tuple(ident.clone(), attrs.iter());
         match fields {
-            Fields::Unit => init_as_unit_variant(ident.clone(), state_scope),
+            Fields::Unit => model_as_unit_variant(ident.clone(), model_scope),
             Fields::Unnamed(fields) => {
-                init_as_tuple_variant(ident.clone(), state_scope, fields.unnamed.iter())
+                model_as_tuple_variant(ident.clone(), model_scope, fields.unnamed.iter())
             }
             Fields::Named(fields) => {
-                init_as_struct_variant(ident.clone(), state_scope, fields.named.iter())
+                model_as_struct_variant(ident.clone(), model_scope, fields.named.iter())
             }
             _ => abort!(Diagnostic::new(
                 Level::Error,
@@ -36,18 +35,18 @@ pub fn init_snippets(variants: Iter<'_, Variant>) -> Vec<TokenStream2> {
     })
 }
 
-fn variant_state_path_tuple(
+fn variant_model_path_tuple(
     ident: Ident,
     attrs: std::slice::Iter<'_, Attribute>,
 ) -> Option<(String, String)> {
     println!("got attribut for variant => {:?}", ident.to_string());
     let mut attrs = attrs.filter_map(
-        |attr| match get_string_from_attribute("state_scope", attr) {
+        |attr| match get_string_from_attribute("model_scope", attr) {
             Ok(op) => op,
             Err(err) => abort!(Diagnostic::new(Level::Error, err.to_string())),
         },
     );
-    let state_scope = if attrs.clone().count() > 1 {
+    let model_scope = if attrs.clone().count() > 1 {
         abort!(Diagnostic::new(
             Level::Error,
             "Multiple state path defined.".into()
@@ -57,32 +56,32 @@ fn variant_state_path_tuple(
     } else {
         "".to_string()
     };
-    if state_scope.is_empty() {
+    if model_scope.is_empty() {
         None
     } else {
-        println!("got attribut => {:?}", state_scope);
-        let string_to_parse = state_scope;
-        let state_scope_string: Vec<&str> = string_to_parse.split("=>").collect();
-        let mut state_scope_string_iter = state_scope_string.iter();
-        let state_path = state_scope_string_iter.next().unwrap_or_else(|| {
+        println!("got attribut => {:?}", model_scope);
+        let string_to_parse = model_scope;
+        let model_scope_string: Vec<&str> = string_to_parse.split("=>").collect();
+        let mut model_scope_string_iter = model_scope_string.iter();
+        let model_path = model_scope_string_iter.next().unwrap_or_else(|| {
             panic!(
-                "expect path for  #[state_path = PATH => INIT] but got this {:?}",
+                "expect path for  #[model_path = PATH => INIT] but got this {:?}",
                 string_to_parse
             )
         });
-        let state_init = state_scope_string_iter.next().expect(
+        let model_init = model_scope_string_iter.next().expect(
             format!(
-                "expect init for  #[state_path = PATH => INIT] but got this {:?}",
+                "expect init for  #[model_path = PATH => INIT] but got this {:?}",
                 string_to_parse
             )
             .as_str(),
         );
-        Some((state_path.trim().to_string(), state_init.trim().to_string()))
+        Some((model_path.trim().to_string(), model_init.trim().to_string()))
     }
 }
 
-fn init_as_unit_variant(ident: Ident, state_scope: Option<(String, String)>) -> TokenStream2 {
-    let format = match state_scope {
+fn model_as_unit_variant(ident: Ident, model_scope: Option<(String, String)>) -> TokenStream2 {
+    let format = match model_scope {
         Some((path, init)) => {
             let token: TokenStream2 = format!(
                 " previous_state.{} ={}(self.to_url(),
@@ -104,9 +103,9 @@ fn init_as_unit_variant(ident: Ident, state_scope: Option<(String, String)>) -> 
         Self::#ident => #format
     }
 }
-fn init_as_tuple_variant(
+fn model_as_tuple_variant(
     ident: Ident,
-    state_scope: Option<(String, String)>,
+    model_scope: Option<(String, String)>,
     fields: Iter<'_, Field>,
 ) -> TokenStream2 {
     if fields.clone().count() != 1 {
@@ -117,7 +116,7 @@ fn init_as_tuple_variant(
     }
 
     // Do stuff about nested init maybe ?
-    let format = match state_scope {
+    let format = match model_scope {
         Some((path, init)) => {
             let token: TokenStream2 = format!(
                 " previous_state.{} ={}(self.to_url(),
@@ -140,9 +139,9 @@ fn init_as_tuple_variant(
     }
 }
 
-fn init_as_struct_variant(
+fn model_as_struct_variant(
     ident: Ident,
-    state_scope: Option<(String, String)>,
+    model_scope: Option<(String, String)>,
     fields: Iter<'_, Field>,
 ) -> TokenStream2 {
     let mut fields_to_extract = fields.clone();
@@ -166,7 +165,7 @@ fn init_as_struct_variant(
     // do stuff also for children init maybe
     //  let string_enum = build_string(structs_tuple, name.clone());
     let payload: String = build_string_payload(structs_tuple);
-    let format = match state_scope {
+    let format = match model_scope {
         Some((path, init)) => {
             let token: TokenStream2 = if payload.is_empty() {
                 format!(

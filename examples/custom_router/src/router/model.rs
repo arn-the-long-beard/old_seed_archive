@@ -1,6 +1,6 @@
 use seed::prelude::Orders;
 
-pub trait StateInit<Routes, State, Msg: 'static> {
+pub trait Init<Routes, State, Msg: 'static> {
     fn init<'b, 'c>(
         &self,
         previous_state: &'b mut State,

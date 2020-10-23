@@ -16,7 +16,7 @@ use crate::routing::routing_variant_snippets;
 use proc_macro::TokenStream;
 
 use crate::guard::guard_snippets;
-use crate::state::init_snippets;
+use crate::init::init_snippets;
 use crate::view::view_snippets;
 use proc_macro_error::{abort, proc_macro_error, Diagnostic, Level};
 use quote::quote;
@@ -26,9 +26,9 @@ use syn::{
 };
 
 mod guard;
+mod init;
 mod root;
 mod routing;
-mod state;
 mod view;
 #[proc_macro_derive(Routes)]
 pub fn routes(input: TokenStream) -> TokenStream {
@@ -391,10 +391,10 @@ pub fn define_as_root(item: TokenStream) -> TokenStream {
 /// Give the ability to init states based on the routing
 ///
 /// ```rust
-/// #[derive(Debug, PartialEq, Clone, Routing, Root, InitState)]
+/// #[derive(Debug, PartialEq, Clone, Routing, Root, Init)]
 ///     
 ///     pub enum ExampleRoutes {
-///         #[state_scope = "stuff => profile::init"]
+///         #[model_scope = "stuff => profile::init"]
 ///         Other {
 ///             id: String,
 ///             children: Settings,
@@ -404,7 +404,7 @@ pub fn define_as_root(item: TokenStream) -> TokenStream {
 ///             query: IndexMap<String, String>,
 ///         },
 ///         Dashboard(DashboardRoutes),
-///         #[state_scope = "profile => profile::init"]
+///         #[model_scope = "profile => profile::init"]
 ///         Profile {
 ///             id: String,
 ///         },
@@ -416,7 +416,7 @@ pub fn define_as_root(item: TokenStream) -> TokenStream {
 /// ```
 ///
 #[proc_macro_error]
-#[proc_macro_derive(InitState, attributes(state_scope))]
+#[proc_macro_derive(Init, attributes(model_scope))]
 pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
     let DeriveInput { ident, data, .. } = parse_macro_input!(item as DeriveInput);
     let variants = match data {
@@ -429,7 +429,7 @@ pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
     let variants = variants.iter();
     let init_snippets = init_snippets(variants.clone());
     TokenStream::from(quote! {
-         impl StateInit<#ident, Model, Msg> for #ident {
+         impl Init<#ident, Model, Msg> for #ident {
         fn init<'b, 'c>(
             &self,
             previous_state: &'b mut Model,
@@ -447,10 +447,10 @@ pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
 /// Give the ability to init states based on the routing
 ///
 /// ```rust
-/// #[derive(Debug, PartialEq, Clone, Routing, Root, OnInit,OnView)]
+/// #[derive(Debug, PartialEq, Clone, Routing, Root, Init,View)]
 ///    
 ///     pub enum ExampleRoutes {
-///         #[state_scope = "stuff => profile::init"]
+///         #[model_scope = "stuff => profile::init"]
 ///         #[view_scope = "stuff => other::view"]
 ///         Other {
 ///             id: String,
@@ -462,7 +462,7 @@ pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
 ///         },
 ///         #[view_scope = "dashboard => profile::view"]
 ///         Dashboard(DashboardRoutes),
-///         #[state_scope = "profile => profile::init"]
+///         #[model_scope = "profile => profile::init"]
 ///         #[view_guard = "logged_user => guard::user => forbidden_view"]
 ///         #[view_scope = "profile => profile::view"]
 ///         Profile {
@@ -480,7 +480,7 @@ pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
 /// TODO : maybe add #view_guard for granular guard ?
 ///
 #[proc_macro_error]
-#[proc_macro_derive(OnView, attributes(guard_scope, view_scope, local_view))]
+#[proc_macro_derive(View, attributes(guard_scope, view_scope, local_view))]
 pub fn derive_add_model_view(item: TokenStream) -> TokenStream {
     let DeriveInput { ident, data, .. } = parse_macro_input!(item as DeriveInput);
     let variants = match data {
@@ -494,7 +494,7 @@ pub fn derive_add_model_view(item: TokenStream) -> TokenStream {
     let view_snippets = view_snippets(variants.clone());
     let guard_snippets = guard_snippets(variants.clone());
     TokenStream::from(quote! {
-    impl ToView<#ident, Model, Msg> for  #ident {
+    impl View<#ident, Model, Msg> for  #ident {
         fn view(&self, scoped_state: &Model) -> Node<Msg> {
             match self {
                  #(#view_snippets),*

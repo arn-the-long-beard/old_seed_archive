@@ -1,4 +1,4 @@
-pub mod state;
+pub mod model;
 pub mod url;
 pub mod view;
 
