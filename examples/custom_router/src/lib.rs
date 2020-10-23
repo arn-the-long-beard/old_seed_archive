@@ -155,6 +155,7 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
 
             model.router.confirm_navigation(url);
 
+            // todo maybe guard should also prevent the init of the model
             if let Some(current_route) = model.router.current_route.clone() {
                 current_route.init(model, orders);
             }
