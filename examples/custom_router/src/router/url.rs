@@ -1,4 +1,4 @@
-use enum_paths::ParseError;
+use crate::ParseError;
 use seed::{prelude::IndexMap, Url};
 
 pub trait Navigation {
@@ -114,11 +114,9 @@ pub fn extract_query_params(url_string: String) -> IndexMap<String, String> {
 #[cfg(test)]
 mod test {
 
-    extern crate enum_paths;
     extern crate router_macro_derive;
 
     use super::*;
-    use enum_paths::{AsPath, ParseError, ParsePath};
 
     #[derive(Debug)]
     struct UserTask {

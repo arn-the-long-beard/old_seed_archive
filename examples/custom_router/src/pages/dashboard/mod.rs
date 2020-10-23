@@ -3,11 +3,9 @@ pub mod message;
 pub mod statistics;
 pub mod task_list;
 use crate::pages::dashboard::task_list::TasksRoutes;
-
-use crate::router::url::Navigation;
-
-use enum_paths::{AsPath, ParseError, ParsePath};
-
+use crate::router;
+pub use router::View;
+use router::*;
 #[derive(Debug, PartialEq, Clone, Routing)]
 pub enum DashboardRoutes {
     Message,

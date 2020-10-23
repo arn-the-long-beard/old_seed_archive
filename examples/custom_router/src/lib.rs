@@ -7,11 +7,8 @@ use crate::{theme::Theme, top_bar::TopBar};
 extern crate router_macro_derive;
 use crate::pages::dashboard::task_list::TasksRoutes;
 use crate::pages::dashboard::DashboardRoutes;
-use crate::router::model::Init;
-use crate::router::url::Navigation;
-use crate::router::view::View;
-use enum_paths::{AsPath, ParseError, ParsePath};
-use router_macro_derive::{Init, Root, Routing, View};
+
+use router_macro_derive::{OnInit, OnView, Root, Routing};
 pub mod models;
 mod pages;
 pub mod router;
@@ -19,9 +16,8 @@ mod theme;
 mod top_bar;
 use crate::pages::admin::AdminRoutes;
 
-use crate::router::url::{convert_to_string, extract_url_payload};
-
-use crate::router::Router;
+pub use crate::router::*;
+pub use router::View;
 use std::fmt::Debug;
 
 // ------ ------
@@ -45,7 +41,7 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Routing, Root, Init, View)]
+#[derive(Debug, PartialEq, Clone, Routing, Root, OnInit, OnView)]
 // need to make a derive (Routing) or something maybe
 pub enum Routes {
     #[model_scope = "state.login => pages::login::init"]

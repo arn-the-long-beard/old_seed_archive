@@ -181,7 +181,7 @@ pub fn derive_as_path(item: TokenStream) -> TokenStream {
 
     let name = ident.to_string();
     TokenStream::from(quote! {
-     impl Navigation for #ident {
+     impl router::Navigation for #ident {
         fn to_url(&self) -> Url {
          let url : Url =    match self {
                     #(#as_snippets),*
@@ -203,7 +203,7 @@ pub fn derive_as_path(item: TokenStream) -> TokenStream {
                 }
             }
         }
-        impl ParsePath for #ident {
+        impl router::ParsePath for #ident {
             fn parse_path(path: &str) -> std::result::Result<Self, ParseError> {
                 let next = path.trim_start_matches("/");
                 Err(ParseError::NoMatch)
@@ -391,7 +391,7 @@ pub fn define_as_root(item: TokenStream) -> TokenStream {
 /// Give the ability to init states based on the routing
 ///
 /// ```rust
-/// #[derive(Debug, PartialEq, Clone, Routing, Root, Init)]
+/// #[derive(Debug, PartialEq, Clone, Routing, Root, OnInit)]
 ///     
 ///     pub enum ExampleRoutes {
 ///         #[model_scope = "stuff => profile::init"]
@@ -416,7 +416,7 @@ pub fn define_as_root(item: TokenStream) -> TokenStream {
 /// ```
 ///
 #[proc_macro_error]
-#[proc_macro_derive(Init, attributes(model_scope))]
+#[proc_macro_derive(OnInit, attributes(model_scope))]
 pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
     let DeriveInput { ident, data, .. } = parse_macro_input!(item as DeriveInput);
     let variants = match data {
@@ -429,7 +429,7 @@ pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
     let variants = variants.iter();
     let init_snippets = init_snippets(variants.clone());
     TokenStream::from(quote! {
-         impl Init<#ident, Model, Msg> for #ident {
+         impl router::Init<#ident, Model, Msg> for #ident {
         fn init<'b, 'c>(
             &self,
             previous_state: &'b mut Model,
@@ -447,7 +447,7 @@ pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
 /// Give the ability to init states based on the routing
 ///
 /// ```rust
-/// #[derive(Debug, PartialEq, Clone, Routing, Root, Init,View)]
+/// #[derive(Debug, PartialEq, Clone, Routing, Root, OnInit,OnView)]
 ///    
 ///     pub enum ExampleRoutes {
 ///         #[model_scope = "stuff => profile::init"]
@@ -480,7 +480,7 @@ pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
 /// TODO : maybe add #view_guard for granular guard ?
 ///
 #[proc_macro_error]
-#[proc_macro_derive(View, attributes(guard_scope, view_scope, local_view))]
+#[proc_macro_derive(OnView, attributes(guard_scope, view_scope, local_view))]
 pub fn derive_add_model_view(item: TokenStream) -> TokenStream {
     let DeriveInput { ident, data, .. } = parse_macro_input!(item as DeriveInput);
     let variants = match data {
@@ -494,7 +494,7 @@ pub fn derive_add_model_view(item: TokenStream) -> TokenStream {
     let view_snippets = view_snippets(variants.clone());
     let guard_snippets = guard_snippets(variants.clone());
     TokenStream::from(quote! {
-    impl View<#ident, Model, Msg> for  #ident {
+    impl router::View<#ident, Model, Msg> for  #ident {
         fn view(&self, scoped_state: &Model) -> Node<Msg> {
             match self {
                  #(#view_snippets),*

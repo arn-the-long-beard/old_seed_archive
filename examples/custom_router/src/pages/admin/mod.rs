@@ -1,9 +1,9 @@
-use crate::router::model::Init;
-use crate::router::url::Navigation;
-use crate::router::view::View;
+use crate::router;
 use crate::Routes;
-use enum_paths::{AsPath, ParseError, ParsePath};
-use router_macro_derive::{Init, Root, Routing, View};
+pub use router::View;
+use router::*;
+
+use router_macro_derive::{OnInit, OnView, Root, Routing};
 use seed::prelude::wasm_bindgen::__rt::std::collections::HashMap;
 use seed::{prelude::*, *};
 
@@ -51,7 +51,7 @@ pub struct Model {
 
 pub enum Msg {}
 
-#[derive(Debug, PartialEq, Clone, Copy, Routing, Root, Init, View)]
+#[derive(Debug, PartialEq, Clone, Routing, Root, OnInit, OnView)]
 pub enum AdminRoutes {
     #[local_view = " => root"]
     Root,

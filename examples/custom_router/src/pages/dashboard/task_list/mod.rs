@@ -1,7 +1,7 @@
 use crate::pages::dashboard::DashboardRoutes;
-use crate::router::url::{extract_url_payload, Navigation};
+use crate::router;
 use crate::Routes;
-use enum_paths::{AsPath, ParseError, ParsePath};
+use router::*;
 use seed::{prelude::*, *};
 
 pub mod task;

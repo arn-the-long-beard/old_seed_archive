@@ -1,15 +1,15 @@
-pub mod model;
-pub mod url;
-pub mod view;
-
+mod model;
+mod path;
+mod url;
+mod view;
 use seed::Url;
 use std::fmt::Debug;
+
+pub use {model::*, path::*, path::*, url::*, url::*, view::*};
 
 // ------ ------
 //     Urls
 // ------ ------
-
-use enum_paths::{AsPath, ParsePath};
 use seed::{*, *};
 
 struct_urls!();
@@ -255,11 +255,10 @@ pub struct AvailableRoute {
 mod test {
     use seed::{prelude::IndexMap, Url};
 
-    extern crate enum_paths;
     extern crate router_macro_derive;
     use super::*;
-    use crate::router::url::{extract_url_payload, Navigation};
-    use enum_paths::{AsPath, ParseError, ParsePath};
+    use crate::router;
+    use router::*;
     use router_macro_derive::{Root, Routing};
 
     use wasm_bindgen_test::*;
