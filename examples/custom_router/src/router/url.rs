@@ -6,10 +6,6 @@ pub trait Navigation {
     where
         Self: Sized;
     fn to_url(&self) -> Url;
-
-    fn get_id_parameter(&self) -> Option<String>;
-    fn get_query_parameters(&self) -> Option<&IndexMap<String, String>>;
-    // fn get_children<T>(&self) -> Option<T>;
 }
 
 pub fn convert_to_string(query: IndexMap<String, String>) -> String {

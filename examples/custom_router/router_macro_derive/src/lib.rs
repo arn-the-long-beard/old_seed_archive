@@ -16,8 +16,6 @@ use crate::routing::routing_variant_snippets;
 use proc_macro::TokenStream;
 
 use crate::guard::guard_snippets;
-use crate::id_parameter::id_variant_snippets;
-use crate::query_parameters::query_variant_snippets;
 use crate::state::init_snippets;
 use crate::view::view_snippets;
 use proc_macro_error::{abort, proc_macro_error, Diagnostic, Level};
@@ -28,8 +26,6 @@ use syn::{
 };
 
 mod guard;
-mod id_parameter;
-mod query_parameters;
 mod root;
 mod routing;
 mod state;
@@ -183,9 +179,6 @@ pub fn derive_as_path(item: TokenStream) -> TokenStream {
     let variants = variants.iter();
     let (as_snippets, parse_snippets) = routing_variant_snippets(variants.clone());
 
-    let id_snippets = id_variant_snippets(variants.clone());
-
-    let query_snippets = query_variant_snippets(variants.clone());
     let name = ident.to_string();
     TokenStream::from(quote! {
      impl Navigation for #ident {
@@ -201,18 +194,6 @@ pub fn derive_as_path(item: TokenStream) -> TokenStream {
         Self: Sized + ParsePath {
         let string_url = url.to_string();
           Self::parse_path(&string_url)
-        }
-
-        fn get_id_parameter(&self) -> Option<String> {
-          match self {
-                    #(#id_snippets),*
-                }
-        }
-
-        fn get_query_parameters(&self) -> Option<&IndexMap<String, String>> {
-             match self {
-                    #(#query_snippets),*
-                }
         }
     }
             impl AsPath for #ident {
