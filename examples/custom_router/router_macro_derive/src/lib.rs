@@ -21,8 +21,8 @@ use crate::view::view_snippets;
 use proc_macro_error::{abort, proc_macro_error, Diagnostic, Level};
 use quote::quote;
 use syn::{
-    export::TokenStream2, parse::Result, parse_macro_input, punctuated::Iter, Attribute, Data,
-    DataEnum, DeriveInput, Error, Field, Fields, Ident, Lit, LitStr, Meta, MetaNameValue, Variant,
+    export::TokenStream2, parse::Result, parse_macro_input, Attribute, Data, DataEnum, DeriveInput,
+    Error, Field, Fields, Ident, Lit, LitStr, Meta, MetaNameValue, Variant,
 };
 
 mod guard;
@@ -30,126 +30,6 @@ mod init;
 mod root;
 mod routing;
 mod view;
-#[proc_macro_derive(Routes)]
-pub fn routes(input: TokenStream) -> TokenStream {
-    // Parse the Input
-    let ast: DeriveInput = syn::parse(input).unwrap();
-
-    // Error out if we're not annotating an enum
-
-    let data: DataEnum = match ast.data {
-        Data::Enum(d) => d,
-        _ => panic!("Can generate Routes only for enum"),
-    };
-
-    let name = &ast.ident;
-    let variants = data.variants.iter();
-
-    let extracted_routes = extract_routes(variants, name);
-
-    let extract_route = quote! {
-         impl ExtractRoutes for #name {
-        fn get_routes() -> Vec<Route> {
-            let mut vec : Vec<Route> = Vec::new();
-            let future_routes : Vec<Route>  = vec![#(#extracted_routes)*];
-            for r in future_routes {
-                vec.push(r);
-            }
-            vec
-        }
-        fn get_hashed_routes() -> HashMap<String, Route> {
-            let mut hash_map: HashMap<String, Route> = HashMap::new();
-            let future_routes : Vec<Route>  = vec![#(#extracted_routes)*];
-                for r in  future_routes {
-                    hash_map.insert(r.path.to_string(), r.clone());
-
-                    for sub_hashed_route in r.extract_hashed_recursive_children() {
-                       hash_map.insert(format!("{}", sub_hashed_route.0 ), sub_hashed_route.1.clone());
-                    }
-
-                }
-            hash_map
-        }
-    }
-
-        };
-
-    extract_route.into()
-}
-
-fn extract_routes(variants: Iter<Variant>, name: &Ident) -> Vec<TokenStream2> {
-    let mut extracted_routes = Vec::new();
-    for v in variants {
-        let var_id = &v.ident;
-        let route_name = var_id.to_string().to_snake_case();
-        match &v.fields {
-            Fields::Named(children) => {
-                let children_type = children.named.first().cloned().unwrap().ty.clone();
-                let path = quote! {#name::#var_id{ children : Default::default()}};
-                let tokens = quote! {
-                        Route {
-                        path: #path.to_string(),
-                        name: #route_name.to_string(),
-                        url :None,
-                        children: #children_type::get_routes(),
-                        guarded: false,
-                        default: false,
-                    },
-                };
-                extracted_routes.push(tokens);
-            }
-            _ => {
-                let path = quote! {#name::#var_id};
-                let tokens = quote! {
-                        Route {
-                        path: #path.to_string(),
-                        name: #route_name.to_string(),
-                        url :None,
-                        children: Vec::new(),
-                        guarded: false,
-                        default: #name::#var_id.get_str("Default").is_some(),
-                    },
-                };
-                extracted_routes.push(tokens);
-            } /* Implement traits for the new struct and stuff */
-        }
-    }
-    extracted_routes
-}
-
-// #[proc_macro_derive(Default)]
-// pub fn create_router(input: TokenStream) -> TokenStream {
-//     // Parse the Input
-//     let ast: DeriveInput = syn::from_str(input).unwrap();
-//
-//     // Error out if we're not annotating an enum
-//
-//     let data: DataEnum = match ast.data {
-//         Data::Enum(d) => d,
-//         _ => panic!("Can generate Routes only for enum"),
-//     };
-//
-//     let name = &ast.ident;
-//     let variants = data.variants.iter();
-//
-//     let mut extracted_routes = extract_routes(variants, name);
-//
-//     let extract_route = quote! {
-//
-//     #[topo::nested]
-//     pub fn get_router() {
-//         let id = topo::CallId::current();
-//         id
-//     }
-//         };
-//
-//     extract_route.into()
-// }
-// /// Specify if a route is default and used as 404
-// #[proc_macro_derive(DefaultRoute,)]
-// pub fn derive_default_route_attr(_item: TokenStream) -> TokenStream {
-//     TokenStream::new()
-// }
 
 /// Derive an enum as Routing for navigation
 /// You can change the value of a path for a given route this way
