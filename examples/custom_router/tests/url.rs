@@ -3,14 +3,10 @@ mod init_state;
 #[cfg(test)]
 mod test {
     extern crate custom_router;
-
-    extern crate enum_paths;
     extern crate router_macro_derive;
-    use self::custom_router::router::url::{convert_to_string, extract_url_payload};
     use super::*;
-    use custom_router::router::url::Navigation;
-    use enum_paths::{AsPath, ParseError, ParsePath};
-    use router_macro_derive::{Root, Routing};
+    use custom_router::*;
+    use router_macro_derive::*;
     use seed::prelude::{IndexMap, *};
     use seed::util::log;
     use seed::{*, *};
@@ -18,7 +14,7 @@ mod test {
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
 
-    #[derive(Debug, PartialEq, Clone, Routing, Root)]
+    #[derive(Debug, PartialEq, Clone, Url, Root)]
     pub enum ExampleRoutes {
         Other {
             id: String,
@@ -36,14 +32,14 @@ mod test {
         #[as_path = ""]
         Root,
     }
-    #[derive(Debug, PartialEq, Clone, Routing)]
+    #[derive(Debug, PartialEq, Clone, Url)]
     pub enum DashboardRoutes {
         #[as_path = "my_stuff"]
         Stuff { id: String },
         #[as_path = ""]
         Root,
     }
-    #[derive(Debug, PartialEq, Clone, Routing)]
+    #[derive(Debug, PartialEq, Clone, Url)]
     pub enum Settings {
         Api(Apis),
         Projects {
@@ -53,7 +49,7 @@ mod test {
         },
     }
 
-    #[derive(Debug, PartialEq, Clone, Routing)]
+    #[derive(Debug, PartialEq, Clone, Url)]
     pub enum Apis {
         Facebook,
         Google,

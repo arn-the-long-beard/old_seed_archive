@@ -46,7 +46,7 @@ mod view;
 /// ```
 ///
 #[proc_macro_error]
-#[proc_macro_derive(Routing, attributes(as_path))]
+#[proc_macro_derive(Url, attributes(as_path))]
 pub fn derive_as_path(item: TokenStream) -> TokenStream {
     let DeriveInput { ident, data, .. } = parse_macro_input!(item as DeriveInput);
     let variants = match data {

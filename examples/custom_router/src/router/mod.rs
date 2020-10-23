@@ -228,19 +228,19 @@ mod test {
     use super::*;
     use crate::router;
     use router::*;
-    use router_macro_derive::{Root, Routing};
+    use router_macro_derive::*;
 
     use wasm_bindgen_test::*;
 
     wasm_bindgen_test_configure!(run_in_browser);
 
-    #[derive(Debug, PartialEq, Copy, Clone, Routing)]
+    #[derive(Debug, PartialEq, Copy, Clone, Url)]
     pub enum DashboardAdminRoutes {
         Other,
         #[as_path = ""]
         Root,
     }
-    #[derive(Debug, PartialEq, Clone, Routing)]
+    #[derive(Debug, PartialEq, Clone, Url)]
     pub enum DashboardRoutes {
         Admin(DashboardAdminRoutes),
         Profile(u32),
@@ -248,7 +248,7 @@ mod test {
         Root,
     }
 
-    #[derive(Debug, PartialEq, Clone, Routing, Root)]
+    #[derive(Debug, PartialEq, Clone, Url, Root)]
     enum ExampleRoutes {
         Login,
         Register,

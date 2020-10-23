@@ -8,7 +8,7 @@ extern crate router_macro_derive;
 use crate::pages::dashboard::task_list::TasksRoutes;
 use crate::pages::dashboard::DashboardRoutes;
 
-use router_macro_derive::{OnInit, OnView, Root, Routing};
+use router_macro_derive::{OnInit, OnView, Root, Url};
 pub mod models;
 mod pages;
 pub mod router;
@@ -41,7 +41,7 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Routing, Root, OnInit, OnView)]
+#[derive(Debug, PartialEq, Clone, Url, Root, OnInit, OnView)]
 // need to make a derive (Routing) or something maybe
 pub enum Routes {
     #[model_scope = "state.login => pages::login::init"]

@@ -19,7 +19,7 @@ impl Default for Model {
         }
     }
 }
-#[derive(Debug, PartialEq, Clone, Routing)]
+#[derive(Debug, PartialEq, Clone, Url)]
 pub enum TasksRoutes {
     Task {
         id: String,
@@ -82,7 +82,7 @@ pub fn get_dummy_data() -> Vec<task::Model> {
     vec![
         task::Model {
             task_no: 0,
-            task_title: "Nested routing".to_string(),
+            task_title: "Nested Url".to_string(),
             task_description: "Try to find an easy way to manipulate nested route".to_string(),
         },
         task::Model {

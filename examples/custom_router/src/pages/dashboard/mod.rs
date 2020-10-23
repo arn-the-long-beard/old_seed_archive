@@ -6,7 +6,7 @@ use crate::pages::dashboard::task_list::TasksRoutes;
 use crate::router;
 pub use router::View;
 use router::*;
-#[derive(Debug, PartialEq, Clone, Routing)]
+#[derive(Debug, PartialEq, Clone, Url)]
 pub enum DashboardRoutes {
     Message,
     Tasks(TasksRoutes),
