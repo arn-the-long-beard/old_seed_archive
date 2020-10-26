@@ -1,4 +1,3 @@
-mod init_state;
 mod routing_module;
 #[cfg(test)]
 mod test {

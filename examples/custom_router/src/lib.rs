@@ -8,7 +8,7 @@ extern crate router_macro_derive;
 use crate::pages::dashboard::task_list::TasksRoutes;
 use crate::pages::dashboard::DashboardRoutes;
 
-use router_macro_derive::{OnInit, OnView, Root, Url};
+use router_macro_derive::{Root, Url};
 pub mod models;
 mod pages;
 pub mod router;
