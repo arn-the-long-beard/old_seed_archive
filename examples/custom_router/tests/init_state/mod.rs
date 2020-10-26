@@ -1,6 +1,8 @@
 pub mod other;
 pub mod profile;
 
+pub use {other::*, profile::*};
+
 #[cfg(test)]
 pub mod test {
     extern crate custom_router;

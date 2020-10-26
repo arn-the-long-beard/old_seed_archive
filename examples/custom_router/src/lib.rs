@@ -50,12 +50,12 @@ pub enum Routes {
     #[view_scope = "state.register => pages::register::view"]
     Register,
     #[view_scope = "state.dashboard => pages::dashboard::cross"]
-    #[guard_scope = " => guard => forbidden"]
+    #[guard = " => guard => forbidden"]
     Dashboard(DashboardRoutes),
     // #[default_route]
     #[model_scope = "state.admin => pages::admin::init"]
     #[view_scope = "state.admin => pages::admin::view"]
-    #[guard_scope = " => admin_guard => forbidden_user"]
+    #[guard = " => admin_guard => forbidden_user"]
     Admin { id: String, children: AdminRoutes },
     #[default_route]
     #[local_view = " => not_found"]

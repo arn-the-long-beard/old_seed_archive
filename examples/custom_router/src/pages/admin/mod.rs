@@ -51,13 +51,12 @@ pub struct Model {
 
 pub enum Msg {}
 
-#[derive(Debug, PartialEq, Clone, Url, Root, OnInit, OnView)]
+#[derive(Debug, PartialEq, Clone, Url, OnInit, OnView)]
 pub enum AdminRoutes {
     #[local_view = " => root"]
     Root,
     #[local_view = " => manager"]
     Manager,
-    #[default_route]
     #[local_view = " => not_found"]
     NotFound,
 }
