@@ -14,7 +14,7 @@ use crate::root::get_default_route;
 use crate::routing::routing_variant_snippets;
 use proc_macro::TokenStream;
 
-use crate::routing_module::{module_init_snippets, modules_path, modules_snippets};
+use crate::routing_modules::{module_init_snippets, modules_path, modules_snippets};
 
 use proc_macro_error::{abort, proc_macro_error, Diagnostic, Level};
 use quote::quote;
@@ -27,7 +27,7 @@ mod guard;
 
 mod root;
 mod routing;
-mod routing_module;
+mod routing_modules;
 
 /// Derive an enum as Routing for navigation
 /// You can change the value of a path for a given route this way
@@ -307,6 +307,18 @@ pub fn define_as_root(item: TokenStream) -> TokenStream {
 ///         #[as_path = ""]
 ///         Root,
 ///     }
+///
+/// fn view(model: &Model) -> impl IntoNodes<Msg> {
+///     vec![
+///         header(&model),
+///         if let Some(route) = &model.router.current_route {
+///             route.view(model)
+///         } else {
+///             home(&model.theme)
+///         },
+///     ]
+/// }
+///
 /// ```
 ///
 ///

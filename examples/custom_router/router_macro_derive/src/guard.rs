@@ -5,38 +5,6 @@ use proc_macro_error::{abort, Diagnostic, Level};
 
 use quote::quote;
 use syn::{export::TokenStream2, punctuated::Iter, Attribute, Field, Fields, Ident, Variant};
-
-pub fn guard_snippets(variants: Iter<'_, Variant>) -> Vec<TokenStream2> {
-    let len = variants.len();
-    let snippets = variants.enumerate().map(|(i, variant)| {
-        let Variant {
-            attrs,
-            ident,
-            fields,
-            ..
-        } = variant;
-        let guard_scope = variant_guard_path_tuple(ident.clone(), attrs.iter());
-
-        match fields {
-            Fields::Unit => guard_as_unit_variant(ident.clone(), guard_scope),
-            Fields::Unnamed(fields) => {
-                guard_as_tuple_variant(ident.clone(), guard_scope, fields.unnamed.iter())
-            }
-            Fields::Named(fields) => {
-                guard_as_struct_variant(ident.clone(), guard_scope, fields.named.iter())
-            }
-            _ => abort!(Diagnostic::new(
-                Level::Error,
-                "Only unit or single tuple variants allowed.".into()
-            )),
-        }
-    });
-    snippets.fold(Vec::with_capacity(len), |mut acc, x| {
-        acc.push(x);
-        acc
-    })
-}
-
 pub fn variant_guard_path_tuple(
     ident: Ident,
     attrs: std::slice::Iter<'_, Attribute>,
