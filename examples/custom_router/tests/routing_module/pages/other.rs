@@ -18,7 +18,15 @@ pub enum Routes {
     #[view = " => video"]
     Video,
 }
-pub fn init() {}
+pub fn init(
+    url: Url,
+    model: &mut Model,
+    id: &String,
+    children: &Routes,
+    orders: &mut impl Orders<Msg>,
+) -> Model {
+    Model {}
+}
 
 pub struct Model {}
 

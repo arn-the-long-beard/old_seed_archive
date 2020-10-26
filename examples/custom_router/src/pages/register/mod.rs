@@ -2,7 +2,9 @@ use crate::models::user::User;
 use crate::request::RequestState;
 use seed::{prelude::*, *};
 
-pub fn init() {}
+pub fn init(url: Url, model: &mut Model, orders: &mut impl Orders<Msg>) -> Model {
+    Model::default()
+}
 
 #[derive(Default)]
 pub struct Model {

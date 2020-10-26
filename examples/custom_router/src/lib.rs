@@ -35,37 +35,65 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
 
     Model {
         theme: Theme::default(),
-        state: Default::default(),
+        register: Default::default(),
+        login: Default::default(),
+        dashboard: Default::default(),
+        admin: Default::default(),
         router,
         logged_user: None,
     }
 }
-
-#[derive(Debug, PartialEq, Clone, Url, Root, OnInit, OnView)]
+#[derive(Debug, PartialEq, Clone, RoutingModules)]
 // need to make a derive (Routing) or something maybe
+#[modules_path = "pages"]
 pub enum Routes {
-    #[model_scope = "state.login => pages::login::init"]
-    #[view_scope = "state.login => pages::login::view"]
-    Login { query: IndexMap<String, String> },
-    #[view_scope = "state.register => pages::register::view"]
+    Login {
+        query: IndexMap<String, String>,
+    },
     Register,
-    #[view_scope = "state.dashboard => pages::dashboard::cross"]
     #[guard = " => guard => forbidden"]
     Dashboard(DashboardRoutes),
-    // #[default_route]
-    #[model_scope = "state.admin => pages::admin::init"]
-    #[view_scope = "state.admin => pages::admin::view"]
+    // // #[default_route]
     #[guard = " => admin_guard => forbidden_user"]
-    Admin { id: String, children: AdminRoutes },
+    Admin {
+        id: String,
+        children: AdminRoutes,
+    },
     #[default_route]
-    #[local_view = " => not_found"]
+    #[view = " => not_found"]
     NotFound,
-    #[local_view = " => forbidden"]
+    #[view = " => forbidden"]
     Forbidden,
     #[as_path = ""]
-    #[local_view = "theme => home"]
+    #[view = "theme => home"]
     Home,
 }
+//
+// #[derive(Debug, PartialEq, Clone, Url, Root, OnInit, OnView)]
+// // need to make a derive (Routing) or something maybe
+// pub enum Routes {
+//     #[model_scope = "login => pages::login::init"]
+//     #[view_scope = "login => pages::login::view"]
+//     Login { query: IndexMap<String, String> },
+//     #[view_scope = "register => pages::register::view"]
+//     Register,
+//     #[view_scope = "dashboard => pages::dashboard::cross"]
+//     #[guard = " => guard => forbidden"]
+//     Dashboard(DashboardRoutes),
+//     // #[default_route]
+//     #[model_scope = "admin => pages::admin::init"]
+//     #[view_scope = "admin => pages::admin::view"]
+//     #[guard = " => admin_guard => forbidden_user"]
+//     Admin { id: String, children: AdminRoutes },
+//     #[default_route]
+//     #[local_view = " => not_found"]
+//     NotFound,
+//     #[local_view = " => forbidden"]
+//     Forbidden,
+//     #[as_path = ""]
+//     #[local_view = "theme => home"]
+//     Home,
+// }
 
 fn guard(model: &Model) -> Option<bool> {
     // could check local storage, cookie or what ever you want
@@ -108,21 +136,27 @@ fn forbidden_user(model: &Model) -> Node<Msg> {
 //     Model
 // ------ ------
 
+// struct Model {
+//     state: State,
+//     router: Router<Routes>,
+//     logged_user: Option<LoggedUser>,
+//     theme: Theme,
+// }
 struct Model {
-    state: State,
+    pub register: pages::register::Model,
+    pub login: pages::login::Model,
+    pub dashboard: pages::dashboard::Model,
+    pub admin: pages::admin::Model,
     router: Router<Routes>,
     logged_user: Option<LoggedUser>,
     theme: Theme,
 }
 
-// ------ State for component ------
-#[derive(Default)]
-pub struct State {
-    pub register: pages::register::Model,
-    pub login: pages::login::Model,
-    pub dashboard: pages::dashboard::Model,
-    pub admin: pages::admin::Model,
-}
+// // ------ State for component ------
+// #[derive(Default)]
+// pub struct State {
+//
+// }
 
 // ------ ------
 //    Update
@@ -161,7 +195,7 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             }
             // model.router.current_route.unwrap().init(model, orders);
 
-            // model.state =  Routes::init_state::<State>( previous_state, url , orders: &mut impl Orders<Msg>);
+            // model =  Routes::init_state::<State>( previous_state, url , orders: &mut impl Orders<Msg>);
         }
         Msg::UrlRequested(request) => {
             log!("URL requested");
@@ -172,25 +206,23 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::Register(register_message) => pages::register::update(
             register_message,
-            &mut model.state.register,
+            &mut model.register,
             &mut orders.proxy(Msg::Register),
         ),
         Msg::Login(login_message) => pages::login::update(
             login_message,
-            &mut model.state.login,
+            &mut model.login,
             &mut orders.proxy(Msg::Login),
         ),
         Msg::Dashboard(dashboard_message) => pages::dashboard::update(
             dashboard_message,
-            &mut model.state.dashboard,
+            &mut model.dashboard,
             &mut orders.proxy(Msg::Dashboard),
         ),
 
-        Msg::Admin(admin_msg) => pages::admin::update(
-            admin_msg,
-            &mut model.state.admin,
-            &mut orders.proxy(Msg::Admin),
-        ),
+        Msg::Admin(admin_msg) => {
+            pages::admin::update(admin_msg, &mut model.admin, &mut orders.proxy(Msg::Admin))
+        }
         Msg::UserLogged(user) => {
             log!("got user logged");
             model.logged_user = Some(user);
@@ -238,7 +270,7 @@ fn view(model: &Model) -> impl IntoNodes<Msg> {
 // /// Auto generated by proc macro attribute and called inside view
 // impl Guarded<Routes, Model, Msg> for Routes {
 //     fn check_before_load(&self, scoped_state: &Model) -> Option<bool> {
-//         if scoped_state.logged_user.is_some() {
+//         if scoped_logged_user.is_some() {
 //             // this party will be a function which the user has full control on, could be use for user permission as well
 //             Some(true)
 //         } else {

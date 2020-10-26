@@ -8,22 +8,18 @@ use router_macro_derive::*;
 use seed::{prelude::*, *};
 use wasm_bindgen_test::*;
 
-#[derive(Debug, PartialEq, Clone, RoutingModules)]
-pub enum Routes {
-    #[default_route]
-    #[view = " => not_found"]
-    NotFound,
-    #[view = " => settings"]
-    Settings,
+pub fn init(
+    url: Url,
+    model: &mut Model,
+    query: &IndexMap<String, String>,
+    orders: &mut impl Orders<Msg>,
+) -> Model {
+    Model {}
 }
 pub enum Msg {}
-pub fn init() {}
+pub struct Model {}
 
-pub struct Model {
-    stuff: String,
-}
-
-pub fn view(nested: &Routes, model: &Model) -> Node<Msg> {
+pub fn view(model: &Model) -> Node<Msg> {
     div![]
 }
 

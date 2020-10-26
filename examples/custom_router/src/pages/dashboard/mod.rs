@@ -14,6 +14,9 @@ pub enum DashboardRoutes {
     #[as_path = ""]
     Root,
 }
+pub fn init(url: Url, model: &mut Model, orders: &mut impl Orders<Msg>) -> Model {
+    Model::default()
+}
 
 impl Default for DashboardRoutes {
     fn default() -> DashboardRoutes {
@@ -57,13 +60,9 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
     }
 }
-pub fn view(model: &Model) -> Node<Msg> {
-    div![&model.name]
-}
-
-pub fn cross(dashboard_routes: &DashboardRoutes, model: &Model) -> Node<Msg> {
+pub fn view(dashboard_routes: &DashboardRoutes, model: &Model) -> Node<Msg> {
     match dashboard_routes {
-        DashboardRoutes::Root => view(model),
+        DashboardRoutes::Root => root(dashboard_routes, model),
         DashboardRoutes::Message => message::view(&model.state.message).map_msg(Msg::Message),
         DashboardRoutes::Statistics => {
             statistics::view(&model.state.statistics).map_msg(Msg::Statistic)
@@ -72,4 +71,8 @@ pub fn cross(dashboard_routes: &DashboardRoutes, model: &Model) -> Node<Msg> {
             task_list::view(task_routes, &model.state.tasks).map_msg(Msg::Tasks)
         }
     }
+}
+
+pub fn root(dashboard_routes: &DashboardRoutes, model: &Model) -> Node<Msg> {
+    div!["root for dashboard"]
 }

@@ -9,7 +9,6 @@ mod tests {
 extern crate convert_case;
 extern crate proc_macro;
 extern crate proc_macro_error;
-use heck::SnakeCase;
 
 use crate::root::get_default_route;
 use crate::routing::routing_variant_snippets;
@@ -17,7 +16,7 @@ use proc_macro::TokenStream;
 
 use crate::guard::guard_snippets;
 use crate::init::init_snippets;
-use crate::routing_module::modules_snippets;
+use crate::routing_module::{module_init_snippets, modules_path, modules_snippets};
 use crate::view::view_snippets;
 use proc_macro_error::{abort, proc_macro_error, Diagnostic, Level};
 use quote::quote;
@@ -439,11 +438,16 @@ pub fn derive_add_model_view(item: TokenStream) -> TokenStream {
 ///
 ///
 #[proc_macro_error]
-#[proc_macro_derive(RoutingModules, attributes(as_path, view, guard, default_route))]
+#[proc_macro_derive(
+    RoutingModules,
+    attributes(as_path, view, guard, default_route, modules_path)
+)]
 pub fn derive_add_module_load(item: TokenStream) -> TokenStream {
     let add_url = derive_as_path(item.clone());
     let root = define_as_root(item.clone());
-    let DeriveInput { ident, data, .. } = parse_macro_input!(item as DeriveInput);
+    let DeriveInput {
+        ident, data, attrs, ..
+    } = parse_macro_input!(item as DeriveInput);
     let variants = match data {
         Data::Enum(data) => data.variants,
         _ => abort!(Diagnostic::new(
@@ -456,7 +460,11 @@ pub fn derive_add_module_load(item: TokenStream) -> TokenStream {
     let default_route_impl = TokenStream2::from(root);
     let variants = variants.iter();
 
-    let modules_snippets = modules_snippets(variants);
+    let modules_path = modules_path(ident.clone(), attrs.iter());
+
+    let modules_snippets = modules_snippets(variants.clone(), modules_path.clone());
+
+    let init_snippets = module_init_snippets(variants.clone(), modules_path.clone());
     TokenStream::from(quote! {
     #url_impl
 
@@ -473,6 +481,20 @@ pub fn derive_add_module_load(item: TokenStream) -> TokenStream {
           None
         }
     }
+
+         impl router::Init<#ident, Model, Msg> for #ident {
+        fn init<'b, 'c>(
+            &self,
+            previous_state: &'b mut Model,
+            orders: &'c mut impl Orders<Msg>,
+        ) -> &'b mut Model {
+            match self {
+                #(#init_snippets),*
+            }
+            previous_state
+        }
+    }
+
 
     })
 }

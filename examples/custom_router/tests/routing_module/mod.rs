@@ -1,11 +1,6 @@
-use crate::routing_module::admin::Msg;
-
 use seed::{prelude::*, *};
 
-pub mod admin;
-pub mod dashboard;
-pub mod other;
-pub mod profile;
+pub mod pages;
 
 #[cfg(test)]
 pub mod test {
@@ -16,7 +11,7 @@ pub mod test {
     use custom_router::*;
     use router_macro_derive::*;
 
-    use seed::browser::service::fetch::FailReason;
+    use crate::routing_module::pages::{admin, dashboard, other, profile};
     use seed::{prelude::*, *};
     use wasm_bindgen_test::*;
 
@@ -33,22 +28,23 @@ pub mod test {
     }
 
     pub enum Msg {
-        other(other::Msg),
-        dashboard(dashboard::Msg),
-        admin(admin::Msg),
-        profile(profile::Msg),
+        Other(other::Msg),
+        Dashboard(dashboard::Msg),
+        Admin(admin::Msg),
+        Profile(profile::Msg),
     }
 
     #[derive(Debug, PartialEq, Clone, RoutingModules)]
+    #[modules_path = "pages"]
     pub enum SuperExampleRoutes {
         Other {
             id: String,
-            children: other::Routes,
+            children: pages::other::Routes,
         },
         Admin {
             query: IndexMap<String, String>,
         },
-        #[guard = " user => guard => forbidden"]
+        #[guard = "user => guard => forbidden"]
         Dashboard(dashboard::Routes),
         Profile {
             id: String,
@@ -76,7 +72,7 @@ pub mod test {
     pub fn not_found(model: &Model) -> Node<Msg> {
         div![]
     }
-    pub fn forbidden(model: &Model) -> Node<Msg> {
+    pub fn forbidden(user: Option<&UserLogged>) -> Node<Msg> {
         div![]
     }
     pub fn guard(user: Option<&UserLogged>) -> Option<bool> {
@@ -86,4 +82,11 @@ pub mod test {
             None
         }
     }
+    // pub fn guard(model : &Model) -> Option<bool> {
+    //     if  model.user.is_some() {
+    //         Some(true)
+    //     } else {
+    //         None
+    //     }
+    // }
 }

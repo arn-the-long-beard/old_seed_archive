@@ -6,6 +6,10 @@ use seed::{prelude::*, *};
 
 pub mod task;
 
+pub fn init(url: Url, model: &Model, orders: &mut impl Orders<Msg>) -> Model {
+    Model::default()
+}
+
 pub struct Model {
     pub tasks: Vec<task::Model>,
     pub selected_task_no: Option<u32>,
