@@ -17,6 +17,7 @@ use proc_macro::TokenStream;
 
 use crate::guard::guard_snippets;
 use crate::init::init_snippets;
+use crate::routing_module::modules_snippets;
 use crate::view::view_snippets;
 use proc_macro_error::{abort, proc_macro_error, Diagnostic, Level};
 use quote::quote;
@@ -29,14 +30,14 @@ mod guard;
 mod init;
 mod root;
 mod routing;
+mod routing_module;
 mod view;
-
 /// Derive an enum as Routing for navigation
 /// You can change the value of a path for a given route this way
 ///
 /// ```rust
 ///
-///     #[derive(Debug, PartialEq, Copy, Clone, Routing)]
+///     #[derive(Debug, PartialEq, Copy, Clone, Url)]
 ///     pub enum DashboardAdminRoutes {
 ///         #[as_path = "my_stuff"]  // "/my_stuff"
 ///         Other,
@@ -325,9 +326,12 @@ pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
 }
 
 /// Give the ability to init states based on the routing
+/// #[model_scope] the property of the parent model that is injected in the router view
+/// #[view_scope] when the view is on an other module so you need message mapping
+/// #[local_view] when the view is on the same module so no need for message mapping
 ///
 /// ```rust
-/// #[derive(Debug, PartialEq, Clone, Routing, Root, OnInit,OnView)]
+/// #[derive(Debug, PartialEq, Clone, Url, Root, OnInit,OnView)]
 ///    
 ///     pub enum ExampleRoutes {
 ///         #[model_scope = "stuff => profile::init"]
@@ -343,15 +347,15 @@ pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
 ///         #[view_scope = "dashboard => profile::view"]
 ///         Dashboard(DashboardRoutes),
 ///         #[model_scope = "profile => profile::init"]
-///         #[view_guard = "logged_user => guard::user => forbidden_view"]
+///         #[guard = "logged_user => guard::user => forbidden_view"]
 ///         #[view_scope = "profile => profile::view"]
 ///         Profile {
 ///             id: String,
 ///         },
-///         #[view_scope = "not_found::view"]
+///         #[view_scope = " => not_found::view"]
 ///         #[default_route]
 ///         NotFound,
-///         #[view_scope = "home => profile::init"]
+///         #[local_view = "home => profile::init"]
 ///         #[as_path = ""]
 ///         Root,
 ///     }
@@ -360,7 +364,7 @@ pub fn derive_add_model_init(item: TokenStream) -> TokenStream {
 /// TODO : maybe add #view_guard for granular guard ?
 ///
 #[proc_macro_error]
-#[proc_macro_derive(OnView, attributes(guard_scope, view_scope, local_view))]
+#[proc_macro_derive(OnView, attributes(guard, view_scope, local_view))]
 pub fn derive_add_model_view(item: TokenStream) -> TokenStream {
     let DeriveInput { ident, data, .. } = parse_macro_input!(item as DeriveInput);
     let variants = match data {
@@ -387,9 +391,88 @@ pub fn derive_add_model_view(item: TokenStream) -> TokenStream {
             }
         }
     }
+    })
+}
 
+/// The RoutingModule makes the enum variants representing modules loaded by the routes
+///
+///  You can rename the path
+///  You can specify routes that do not load module ( no init, no specific Model & Msg and no view )
+///
+///  When loading the module, a parser will get the init function , Model, Msg, Routes, Update, and View
+///
+/// ```rust
+///
+///
+///
+/// #[derive(Debug, PartialEq, Clone, RoutingModules)]
+///     pub enum ExampleRoutes {
+///        // #[as_module= "my_stuff"] // the module is name my_stuff.rs
+///         Other {
+///             id: String,
+///             children: Settings,
+///         },
+///         #[guard = "logged_user => admin_guard => not_authorized_view"]
+///         Admin { // will load module "admin.rs"
+///          // will load model.admin and as well
+///          // equal to  
+///          // #[model_scope = "admin => admin ::init"] will check init has correct arguments
+///          // #[view_scope = "admin => admin::view"]  will check viewt has correct arguments
+///             query: IndexMap<String, String>,
+///         },
+///         #[guard = "logged_user => user_guard => not_logged_user_view"]
+///         Dashboard(DashboardRoutes), // will load module "dashboard"
+///         Profile { // will load module "profile"
+///             id: String,
+///         },
+///         #[guard = "logged_user => admin_guard => not_authorized_view"]
+///         #[view = " => my_stuff"]
+///         MyStuff,
+///         #[view = " => not_found"]
+///         #[default_route]
+///         NotFound,
+///         #[view = " => home"]
+///         #[as_path = ""]
+///         Root,
+///     }
+/// ```
+///
+///
+#[proc_macro_error]
+#[proc_macro_derive(RoutingModules, attributes(as_path, view, guard, default_route))]
+pub fn derive_add_module_load(item: TokenStream) -> TokenStream {
+    let add_url = derive_as_path(item.clone());
+    let root = define_as_root(item.clone());
+    let DeriveInput { ident, data, .. } = parse_macro_input!(item as DeriveInput);
+    let variants = match data {
+        Data::Enum(data) => data.variants,
+        _ => abort!(Diagnostic::new(
+            Level::Error,
+            "Can only derive AsPath for enums.".into()
+        )),
+    };
 
+    let url_impl = TokenStream2::from(add_url);
+    let default_route_impl = TokenStream2::from(root);
+    let variants = variants.iter();
 
+    let modules_snippets = modules_snippets(variants);
+    TokenStream::from(quote! {
+    #url_impl
+
+    #default_route_impl
+
+    impl router::View<#ident, Model, Msg> for  #ident {
+        fn view(&self, scoped_state: &Model) -> Node<Msg> {
+            match self {
+                 #(#modules_snippets),*
+            }
+        }
+
+        fn check_before_load(&self, scoped_state: &Model) -> Option<bool> {
+          None
+        }
+    }
 
     })
 }

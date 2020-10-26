@@ -42,12 +42,10 @@ pub fn variant_guard_path_tuple(
     attrs: std::slice::Iter<'_, Attribute>,
 ) -> Option<(String, String, String)> {
     println!("got attribut for variant => {:?}", ident.to_string());
-    let mut attrs = attrs.filter_map(
-        |attr| match get_string_from_attribute("guard_scope", attr) {
-            Ok(op) => op,
-            Err(err) => abort!(Diagnostic::new(Level::Error, err.to_string())),
-        },
-    );
+    let mut attrs = attrs.filter_map(|attr| match get_string_from_attribute("guard", attr) {
+        Ok(op) => op,
+        Err(err) => abort!(Diagnostic::new(Level::Error, err.to_string())),
+    });
     let guard_scope = if attrs.clone().count() > 1 {
         abort!(Diagnostic::new(
             Level::Error,
