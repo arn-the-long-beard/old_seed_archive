@@ -286,13 +286,17 @@ pub fn define_as_root(item: TokenStream) -> TokenStream {
     })
 }
 
-// The RoutingModule makes the enum variants representing modules loaded by the routes
+/// The RoutingModule makes the enum variants representing modules loaded by the routes
+/// By default, an enum variant snake case is equal to its module name
 ///
 ///  You can rename the path
-///  You can specify routes that do not load module ( no init, no specific Model & Msg and no view )
+///  You can specify routes that does not load module ( no init, no specific Model & Msg and no view )
 ///
-///  When loading the module, a parser will get the init function , Model, Msg, Routes, Update, and View
+/// The derive macro will call the init function , Model, Msg, Routes, Update, and View
 ///
+/// Todo :
+/// - Could add as_module
+/// - Could generate the code for fn update as well ?
 /// ```rust
 ///
 ///

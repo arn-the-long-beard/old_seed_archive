@@ -48,24 +48,25 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
 #[modules_path = "pages"]
 pub enum Routes {
     Login {
-        query: IndexMap<String, String>,
+        query: IndexMap<String, String>, // -> http://localhost:8000/login?name=JohnDoe
     },
     Register,
     #[guard = " => guard => forbidden"]
-    Dashboard(DashboardRoutes),
+    Dashboard(DashboardRoutes), // -> http://localhost:8000/dashboard/*
     // // #[default_route]
     #[guard = " => admin_guard => forbidden_user"]
     Admin {
+        // -> /admin/:id/*
         id: String,
         children: AdminRoutes,
     },
     #[default_route]
-    #[view = " => not_found"]
+    #[view = " => not_found"] // -> http://localhost:8000/not_found*
     NotFound,
-    #[view = " => forbidden"]
+    #[view = " => forbidden"] // -> http://localhost:8000/forbidden*
     Forbidden,
     #[as_path = ""]
-    #[view = "theme => home"]
+    #[view = "theme => home"] // -> http://localhost:8000/
     Home,
 }
 
