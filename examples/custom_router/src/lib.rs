@@ -8,7 +8,7 @@ extern crate router_macro_derive;
 use crate::pages::dashboard::task_list::TasksRoutes;
 use crate::pages::dashboard::DashboardRoutes;
 
-use router_macro_derive::{Root, Url};
+use router_macro_derive::{AsUrl, RoutingModules};
 pub mod models;
 mod pages;
 pub mod router;
@@ -68,32 +68,6 @@ pub enum Routes {
     #[view = "theme => home"]
     Home,
 }
-//
-// #[derive(Debug, PartialEq, Clone, Url, Root, OnInit, OnView)]
-// // need to make a derive (Routing) or something maybe
-// pub enum Routes {
-//     #[model_scope = "login => pages::login::init"]
-//     #[view_scope = "login => pages::login::view"]
-//     Login { query: IndexMap<String, String> },
-//     #[view_scope = "register => pages::register::view"]
-//     Register,
-//     #[view_scope = "dashboard => pages::dashboard::cross"]
-//     #[guard = " => guard => forbidden"]
-//     Dashboard(DashboardRoutes),
-//     // #[default_route]
-//     #[model_scope = "admin => pages::admin::init"]
-//     #[view_scope = "admin => pages::admin::view"]
-//     #[guard = " => admin_guard => forbidden_user"]
-//     Admin { id: String, children: AdminRoutes },
-//     #[default_route]
-//     #[local_view = " => not_found"]
-//     NotFound,
-//     #[local_view = " => forbidden"]
-//     Forbidden,
-//     #[as_path = ""]
-//     #[local_view = "theme => home"]
-//     Home,
-// }
 
 fn guard(model: &Model) -> Option<bool> {
     // could check local storage, cookie or what ever you want
@@ -136,12 +110,6 @@ fn forbidden_user(model: &Model) -> Node<Msg> {
 //     Model
 // ------ ------
 
-// struct Model {
-//     state: State,
-//     router: Router<Routes>,
-//     logged_user: Option<LoggedUser>,
-//     theme: Theme,
-// }
 struct Model {
     pub register: pages::register::Model,
     pub login: pages::login::Model,

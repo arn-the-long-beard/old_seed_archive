@@ -23,7 +23,7 @@ impl Default for Model {
         }
     }
 }
-#[derive(Debug, PartialEq, Clone, Url)]
+#[derive(Debug, PartialEq, Clone, AsUrl)]
 pub enum TasksRoutes {
     Task {
         id: String,

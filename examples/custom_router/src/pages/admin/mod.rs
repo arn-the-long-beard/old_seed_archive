@@ -3,7 +3,7 @@ use crate::Routes;
 pub use router::View;
 use router::*;
 
-use router_macro_derive::{Root, Url};
+use router_macro_derive::{AsUrl, Root};
 use seed::prelude::wasm_bindgen::__rt::std::collections::HashMap;
 use seed::{prelude::*, *};
 

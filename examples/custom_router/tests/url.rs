@@ -13,7 +13,7 @@ mod test {
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
 
-    #[derive(Debug, PartialEq, Clone, Url, Root)]
+    #[derive(Debug, PartialEq, Clone, AsUrl, Root)]
     pub enum ExampleRoutes {
         Other {
             id: String,
@@ -31,14 +31,14 @@ mod test {
         #[as_path = ""]
         Root,
     }
-    #[derive(Debug, PartialEq, Clone, Url)]
+    #[derive(Debug, PartialEq, Clone, AsUrl)]
     pub enum DashboardRoutes {
         #[as_path = "my_stuff"]
         Stuff { id: String },
         #[as_path = ""]
         Root,
     }
-    #[derive(Debug, PartialEq, Clone, Url)]
+    #[derive(Debug, PartialEq, Clone, AsUrl)]
     pub enum Settings {
         Api(Apis),
         Projects {
@@ -48,7 +48,7 @@ mod test {
         },
     }
 
-    #[derive(Debug, PartialEq, Clone, Url)]
+    #[derive(Debug, PartialEq, Clone, AsUrl)]
     pub enum Apis {
         Facebook,
         Google,

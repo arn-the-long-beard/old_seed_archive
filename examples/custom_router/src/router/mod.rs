@@ -234,13 +234,13 @@ mod test {
 
     wasm_bindgen_test_configure!(run_in_browser);
 
-    #[derive(Debug, PartialEq, Copy, Clone, Url)]
+    #[derive(Debug, PartialEq, Copy, Clone, AsUrl)]
     pub enum DashboardAdminRoutes {
         Other,
         #[as_path = ""]
         Root,
     }
-    #[derive(Debug, PartialEq, Clone, Url)]
+    #[derive(Debug, PartialEq, Clone, AsUrl)]
     pub enum DashboardRoutes {
         Admin(DashboardAdminRoutes),
         Profile(u32),
@@ -248,7 +248,7 @@ mod test {
         Root,
     }
 
-    #[derive(Debug, PartialEq, Clone, Url, Root)]
+    #[derive(Debug, PartialEq, Clone, AsUrl, Root)]
     enum ExampleRoutes {
         Login,
         Register,
