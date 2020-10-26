@@ -32,20 +32,40 @@ mod routing_modules;
 /// Derive an enum as Routing for navigation
 /// You can change the value of a path for a given route this way
 ///
+///
+///
 /// ```rust
 ///
-///     #[derive(Debug, PartialEq, Copy, Clone, Url)]
+///     #[derive(Debug, PartialEq, Copy, Clone, AsUrl)]
 ///     pub enum DashboardAdminRoutes {
 ///         #[as_path = "my_stuff"]  // "/my_stuff"
 ///         Other,
 ///         #[as_path = ""]
 ///         Root,  // "/"
 ///     }
+///
+///
+/// fn test_url() {
+///     let mut query_search: IndexMap<String, String> = IndexMap::new();
+///
+///     query_search.insert("user".to_string(), "arn".to_string());
+///     query_search.insert("role".to_string(), "baby_programmer".to_string());
+///     query_search.insert("location".to_string(), "norway".to_string());
+///     let url = ExampleRoutes::Admin {
+///         query: query_search.clone(),
+///     }
+///         .to_url();
+///     let url_to_compare: Url = "/admin?user=arn&role=baby_programmer&location=norway"
+///         .parse()
+///         .unwrap();
+///     assert_eq!(url, url_to_compare);
+/// }
+///
 /// ```
 ///
 #[proc_macro_error]
-#[proc_macro_derive(Url, attributes(as_path))]
-pub fn derive_as_path(item: TokenStream) -> TokenStream {
+#[proc_macro_derive(AsUrl, attributes(as_path))]
+pub fn derive_as_url(item: TokenStream) -> TokenStream {
     let DeriveInput { ident, data, .. } = parse_macro_input!(item as DeriveInput);
     let variants = match data {
         Data::Enum(data) => data.variants,
@@ -328,7 +348,7 @@ pub fn define_as_root(item: TokenStream) -> TokenStream {
     attributes(as_path, view, guard, default_route, modules_path)
 )]
 pub fn derive_add_module_load(item: TokenStream) -> TokenStream {
-    let add_url = derive_as_path(item.clone());
+    let add_url = derive_as_url(item.clone());
     let root = define_as_root(item.clone());
     let DeriveInput {
         ident, data, attrs, ..
